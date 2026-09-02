@@ -11,78 +11,108 @@
             --card-bg: #1e293b;
             --text: #f8fafc;
             --text-muted: #94a3b8;
+            --accent: #3b82f6;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
         }
         .container {
             max-width: 600px;
             margin: 0 auto;
+            padding-bottom: 40px;
         }
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         header h1 {
             color: var(--primary);
             margin: 0;
-            font-size: 28px;
+            font-size: 26px;
         }
         header p {
             color: var(--text-muted);
-            font-size: 14px;
+            font-size: 13px;
         }
         .card {
             background-color: var(--card-bg);
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 18px;
+            margin-bottom: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .card h2 {
-            font-size: 18px;
+            font-size: 16px;
             margin-top: 0;
             color: var(--primary);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
         }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 10px;
         }
         .stat-box {
             background: rgba(255,255,255,0.05);
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
             text-align: center;
         }
         .stat-value {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: var(--text);
         }
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
-            margin-top: 5px;
+            margin-top: 4px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: white;
+            box-sizing: border-box;
+            font-size: 14px;
         }
         button {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 12px;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
             width: 100%;
             font-weight: bold;
-            margin-top: 10px;
+            margin-top: 5px;
         }
-        button:active {
-            opacity: 0.8;
+        button.secondary {
+            background-color: var(--accent);
+        }
+        .log-list {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .log-item {
+            background: rgba(0,0,0,0.2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
         }
     </style>
 </head>
@@ -91,10 +121,10 @@
     <div class="container">
         <header>
             <h1>Fit50</h1>
-            <p>برنامجك الصحي والرياضي المتكامل (عمر 50+)</p>
+            <p>منظومتك الصحية والرياضية (عمر 50+)</p>
         </header>
 
-        <!-- قسم القياسات الحيوية -->
+        <!-- القياسات الأساسية -->
         <div class="card">
             <h2>القياسات الأساسية</h2>
             <div class="stats-grid">
@@ -109,31 +139,122 @@
             </div>
         </div>
 
-        <!-- قسم التحاليل الطبية -->
+        <!-- عداد السعرات اليومي -->
+        <div class="card">
+            <h2>عداد السعرات والتغذية</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="total-cals">0</div>
+                    <div class="stat-label">السعرات المكتسبة اليوم</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="total-protein">0 غ</div>
+                    <div class="stat-label">إجمالي البروتين</div>
+                </div>
+            </div>
+            <input type="text" id="meal-name" placeholder="اسم الوجبة (مثلاً: صدر دجاج مع سلطة)">
+            <input type="number" id="meal-cals" placeholder="السعرات الحرارية">
+            <input type="number" id="meal-protein" placeholder="البروتين (جرام)">
+            <button onclick="addMeal()">إضافة الوجبة</button>
+        </div>
+
+        <!-- جدول وتتبع التمارين اليومية -->
+        <div class="card">
+            <h2>سجل التمارين اليومية</h2>
+            <select id="exercise-type">
+                <option value="تمارين مقاومة (علوي)">تمارين مقاومة (علوي)</option>
+                <option value="تمارين مقاومة (سفلي وبطن)">تمارين مقاومة (سفلي وبطن)</option>
+                <option value="كارديو / مشي سريع">كارديو / مشي سريع</option>
+                <option value="إطالة وتوازن">إطالة وتوازن</option>
+            </select>
+            <input type="text" id="exercise-details" placeholder="التفاصيل (مثلاً: 3 مجموعات، 12 تكرار)">
+            <button class="secondary" onclick="addExercise()">تسجيل التمرين</button>
+            
+            <div class="log-list" id="exercise-logs">
+                <!-- سجل التمارين يظهر هنا -->
+            </div>
+        </div>
+
+        <!-- المؤشرات الطبية الحيوية -->
         <div class="card">
             <h2>المؤشرات الطبية الحيوية</h2>
             <div class="stats-grid">
                 <div class="stat-box">
-                    <div class="stat-value" id="hba1c-val">---</div>
+                    <div class="stat-value">5.7 %</div>
                     <div class="stat-label">التراكمي HbA1c</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value" id="b12-val">---</div>
-                    <div class="stat-label">فيتامين B12</div>
+                    <div class="stat-value">450</div>
+                    <div class="stat-label">فيتامين B12 (pg/mL)</div>
                 </div>
             </div>
         </div>
-
-        <!-- زر تفاعلي -->
-        <button onclick="updateData()">تحديث السجلات</button>
     </div>
 
     <script>
-        function updateData() {
-            // تجربة التخزين المحلي localStorage
-            const sampleData = { lastSync: new Date().toLocaleString() };
-            localStorage.setItem('fit50_sync', JSON.stringify(sampleData));
-            alert('تم حفظ وتحديث البيانات محلياً بنجاح!');
+        // تحميل البيانات المحفوظة عند فتح التطبيق
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        function addMeal() {
+            const name = document.getElementById('meal-name').value;
+            const cals = parseInt(document.getElementById('meal-cals').value) || 0;
+            const protein = parseInt(document.getElementById('meal-protein').value) || 0;
+
+            if (!name) {
+                alert('يرجى كتابة اسم الوجبة');
+                return;
+            }
+
+            let nutritionData = JSON.parse(localStorage.getItem('fit50_nutrition')) || { cals: 0, protein: 0, meals: [] };
+            nutritionData.cals += cals;
+            nutritionData.protein += protein;
+            nutritionData.meals.push({ name, cals, protein });
+
+            localStorage.setItem('fit50_nutrition', JSON.stringify(nutritionData));
+            updateNutritionUI();
+            
+            // تفريغ الحقول
+            document.getElementById('meal-name').value = '';
+            document.getElementById('meal-cals').value = '';
+            document.getElementById('meal-protein').value = '';
+        }
+
+        function addExercise() {
+            const type = document.getElementById('exercise-type').value;
+            const details = document.getElementById('exercise-details').value;
+
+            if (!details) {
+                alert('يرجى كتابة تفاصيل التمرين');
+                return;
+            }
+
+            let exercises = JSON.parse(localStorage.getItem('fit50_exercises')) || [];
+            exercises.unshift({ type, details, date: new Date().toLocaleDateString('ar-SA') });
+
+            localStorage.setItem('fit50_exercises', JSON.stringify(exercises));
+            updateExerciseUI();
+            
+            document.getElementById('exercise-details').value = '';
+        }
+
+        function updateNutritionUI() {
+            let nutritionData = JSON.parse(localStorage.getItem('fit50_nutrition')) || { cals: 0, protein: 0 };
+            document.getElementById('total-cals').innerText = nutritionData.cals;
+            document.getElementById('total-protein').innerText = nutritionData.protein + ' غ';
+        }
+
+        function updateExerciseUI() {
+            let exercises = JSON.parse(localStorage.getItem('fit50_exercises')) || [];
+            let container = document.getElementById('exercise-logs');
+            container.innerHTML = '';
+            exercises.forEach(ex => {
+                container.innerHTML += `<div class="log-item"><span><b>${ex.type}</b>: ${ex.details}</span><span>${ex.date}</span></div>`;
+            });
+        }
+
+        function loadData() {
+            updateNutritionUI();
+            updateExerciseUI();
         }
     </script>
 </body>
