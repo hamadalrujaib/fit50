@@ -448,6 +448,11 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
     <h1>التقدّم</h1>
   </div>
   <div class="wrap">
+    <div class="sec">
+      <h2>قراءة أسبوعك</h2>
+      <div id="analysis"></div>
+    </div>
+
     <div class="card">
       <label class="f">سجّل وزن اليوم (كجم)</label>
       <div style="display:flex;gap:9px">
@@ -664,7 +669,7 @@ let S = {
 };
 const today = () => new Date().toISOString().slice(0,10);
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 9;
+const APP_VER = 10;
 
 let STORE_OK = null;
 
@@ -788,7 +793,7 @@ function go(id,el){
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
   window.scrollTo(0,0);
-  if(id==='prog'){ drawCharts(); renderDonut(); }
+  if(id==='prog'){ drawCharts(); renderDonut(); renderAnalysis(); }
 }
 function segTrain(i,el){
   document.querySelectorAll('#s-train .seg button').forEach(b=>b.classList.remove('on'));
@@ -2191,6 +2196,172 @@ function moveMeal(i){
 }
 function doMove(i,k){
   const t=today(); S.nutrition[t][i].m=k; save(); closeSheet(); renderMeals(); toast("نُقل إلى "+mealInfo(k).n);
+}
+
+
+/* ============================================================
+   التحليل الأسبوعي
+   ============================================================ */
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+function inWindow(dateStr, from, to){ return dateStr>=daysAgo(from) && dateStr<=daysAgo(to); }
+
+function nutriAvg(from,to){
+  let k=0,p=0,su=0,c=0,f=0,n=0;
+  Object.keys(S.nutrition).forEach(d=>{
+    if(!inWindow(d,from,to)) return;
+    const arr=S.nutrition[d]; if(!arr.length) return;
+    n++;
+    arr.forEach(x=>{ k+=x.k||0; p+=x.p||0; su+=x.su||0; c+=x.c||0; f+=x.f||0; });
+  });
+  return n?{days:n,k:k/n,p:p/n,su:su/n,c:c/n,f:f/n}:null;
+}
+
+function trainStats(from,to){
+  const w=S.workouts.filter(x=>inWindow(x.date,from,to));
+  const mins=w.reduce((a,x)=>a+(x.min||0),0);
+  const km=w.reduce((a,x)=>a+(x.km||0),0);
+  const recs=w.filter(x=>x.max&&x.rec).map(x=>x.max-x.rec);
+  const avgs=w.filter(x=>x.avg).map(x=>x.avg);
+  return {n:w.length, mins:mins, km:km,
+          rec: recs.length?recs.reduce((a,b)=>a+b,0)/recs.length:null,
+          hr:  avgs.length?avgs.reduce((a,b)=>a+b,0)/avgs.length:null};
+}
+
+function mealProtein(){
+  const out={}; const days=new Set();
+  Object.keys(S.nutrition).forEach(d=>{
+    if(!inWindow(d,7,0)) return;
+    days.add(d);
+    S.nutrition[d].forEach(x=>{ const k=x.m||"u"; out[k]=(out[k]||0)+(x.p||0); });
+  });
+  const n=days.size||1;
+  Object.keys(out).forEach(k=>out[k]=out[k]/n);
+  return out;
+}
+
+function box(color,icon,title,body,tone){
+  const bg = tone==='bad'?'#FCF1F0' : tone==='good'?'#EFF7F2' : tone==='warn'?'#FFF9EC' : '#F5F8F7';
+  const bd = tone==='bad'?'#F0D5D3' : tone==='good'?'#D3E8DC' : tone==='warn'?'#F0E2BE' : '#E3EAE7';
+  return `<div class="card anim" style="background:${bg};border-color:${bd};margin-bottom:10px">
+    <div style="display:flex;gap:10px">
+      <div style="width:30px;height:30px;border-radius:10px;background:${color}1E;flex:none;
+        display:flex;align-items:center;justify-content:center;font-size:15px">${icon}</div>
+      <div style="flex:1">
+        <b style="font-size:14px;color:${color};font-family:'Cairo',sans-serif">${title}</b>
+        <div style="font-size:12.5px;line-height:1.85;color:var(--ink2);margin-top:3px">${body}</div>
+      </div></div></div>`;
+}
+
+function renderAnalysis(){
+  const el=document.getElementById('analysis'); if(!el) return;
+  const cur=trainStats(7,0), prev=trainStats(14,8);
+  const nu=nutriAvg(7,0), nuPrev=nutriAvg(14,8);
+  const out=[]; const actions=[];
+
+  // ===== التمرين =====
+  if(cur.n===0){
+    out.push(box('#9E2B36','⚠️','لا جلسات هذا الأسبوع',
+      'لم تُسجَّل أي جلسة خلال سبعة أيام. ابدأ بجلسة واحدة خفيفة — العودة أسهل مما تظن.','bad'));
+    actions.push('سجّل جلسة واحدة اليوم مهما كانت قصيرة');
+  } else {
+    const dm = prev.mins ? cur.mins-prev.mins : null;
+    let t = `<b>${cur.n} جلسات · ${cur.mins} دقيقة</b>`;
+    if(cur.km) t += ` · ${cur.km.toFixed(1)} كم`;
+    if(dm!==null) t += `<br>مقارنة بالأسبوع السابق: <b style="color:${dm>=0?'#2F8F6E':'#B4531F'}">${dm>0?'+':''}${dm} دقيقة</b>`;
+    const tone = cur.mins>=150?'good' : cur.mins>=90?'warn':'bad';
+    t += `<br>الهدف الأسبوعي 150 دقيقة — أنت عند ${Math.round(cur.mins/150*100)}٪.`;
+    out.push(box('#B4531F','🏃','حجم التمرين',t,tone));
+    if(cur.mins<150) actions.push(`أضف ${150-cur.mins} دقيقة هذا الأسبوع للوصول إلى 150`);
+  }
+
+  // ===== نبض التعافي =====
+  if(cur.rec!==null){
+    const q = cur.rec>=20?['ممتاز','good'] : cur.rec>=12?['جيد','warn'] : ['ضعيف','bad'];
+    let t=`متوسط الهبوط بعد دقيقة: <b>${Math.round(cur.rec)} نبضة</b> — ${q[0]}`;
+    if(prev.rec!==null){
+      const d=Math.round(cur.rec-prev.rec);
+      if(d!==0) t+=`<br>عن الأسبوع السابق: <b style="color:${d>0?'#2F8F6E':'#B4531F'}">${d>0?'+':''}${d} نبضة</b>`;
+    }
+    if(cur.hr) t+=`<br>متوسط النبض ${Math.round(cur.hr)} — ${Math.round(cur.hr/170*100)}٪ من الأقصى`;
+    out.push(box('#9E2B36','❤️','لياقة القلب',t,q[1]));
+    if(cur.rec<12) actions.push('نبض التعافي ضعيف — خفّف الشدة وزد مدة الجلسات الهادئة');
+  }
+
+  // ===== التغذية =====
+  if(nu){
+    const sugarPct = nu.k? nu.su*4/nu.k*100 : 0;
+    let t=`متوسط <b>${Math.round(nu.k)}</b> سعرة يوميًا على مدى ${nu.days} أيام مسجّلة`;
+    const diff=Math.round(nu.k-S.target);
+    t+=` — ${diff>0?`<b style="color:#B4531F">فوق الهدف بـ${diff}</b>`:`<b style="color:#2F8F6E">تحت الهدف بـ${Math.abs(diff)}</b>`}`;
+    const tone = Math.abs(diff)<=200?'good':'warn';
+    out.push(box('#0C3B32','🍽️','متوسط السعرات',t,tone));
+
+    // بروتين
+    const pPct=Math.round(nu.p/S.protTarget*100);
+    const pt = pPct>=90?'good' : pPct>=70?'warn':'bad';
+    let bt=`متوسط <b>${Math.round(nu.p)}</b> غرامًا يوميًا من هدف ${S.protTarget} — ${pPct}٪`;
+    const mp=mealProtein();
+    const named=Object.keys(mp).filter(k=>k!=='u');
+    if(named.length){
+      const low=named.sort((a,b)=>mp[a]-mp[b])[0];
+      bt+=`<br>أقل وجبة بروتينًا: <b>${mealInfo(low).n}</b> بمتوسط ${Math.round(mp[low])} غرامًا`;
+    }
+    if(pPct<90) actions.push(`ارفع البروتين ${Math.round(S.protTarget-nu.p)} غرامًا يوميًا`);
+    out.push(box('#C9922B','🥩','البروتين',bt,pt));
+
+    // سكريات
+    const st = sugarPct<10?'good' : sugarPct<15?'warn':'bad';
+    let st2=`متوسط <b>${Math.round(nu.su)}</b> غرامًا يوميًا — ${Math.round(sugarPct)}٪ من الطاقة`;
+    st2+=`<br>الهدف أقل من 10٪ · هذا البند الأكثر تأثيرًا على الكبد الدهني.`;
+    if(sugarPct>=15) actions.push(`اخفض السكريات ${Math.round(nu.su - S.target*0.10/4)} غرامًا يوميًا`);
+    out.push(box('#9E2B36','🍬','السكريات',st2,st));
+  } else {
+    out.push(box('#7D908A','📝','لا بيانات تغذية',
+      'لم تسجّل وجبات خلال الأسبوع. التسجيل ثلاثة أيام فقط يكفي لرسم صورة واضحة.','plain'));
+  }
+
+  // ===== تكوين الجسم =====
+  const b=S.body;
+  if(b.length>=2){
+    const c=b[b.length-1], f0=b[0];
+    let t='';
+    const add=(lab,k,unit,goodDown)=>{
+      if(c[k]===undefined||f0[k]===undefined) return;
+      const d=+(c[k]-f0[k]).toFixed(1);
+      const good = goodDown ? d<0 : d>0;
+      t+=`${lab}: <b style="color:${d===0?'#7D908A':(good?'#2F8F6E':'#B4531F')}">${d>0?'+':''}${d}${unit}</b><br>`;
+    };
+    add('الوزن','w',' كجم',true);
+    add('نسبة الدهون','fat','٪',true);
+    add('دهون الأحشاء','vf','',true);
+    add('العضلات','smm',' كجم',false);
+    const vfNow=c.vf;
+    let tone='plain';
+    if(vfNow!==undefined) tone = vfNow<10?'good' : vfNow<15?'warn':'bad';
+    if(vfNow!==undefined && vfNow>=10)
+      t+=`<span style="color:#9E2B36">دهون الأحشاء ${vfNow} — الهدف أقل من 9.</span>`;
+    out.push(box('#1C6E8C','⚖️','تكوين الجسم منذ أول قياس',t,tone));
+  } else if(b.length===1){
+    out.push(box('#1C6E8C','⚖️','قياس واحد فقط',
+      'سجّل قياسًا ثانيًا بعد أسبوعين لتبدأ رؤية الاتجاه. القياس الواحد رقم، والقياسان اتجاه.','plain'));
+  }
+
+  // ===== الأولويات =====
+  let head='';
+  if(actions.length){
+    head=`<div class="card" style="background:linear-gradient(150deg,#175E4E,#0C3B32);border:none;color:#fff;margin-bottom:12px">
+      <b style="font-size:14px;color:#F0D89A;font-family:'Cairo',sans-serif">أولوياتك هذا الأسبوع</b>
+      <div style="margin-top:8px">${actions.slice(0,3).map((a,i)=>
+        `<div style="display:flex;gap:9px;font-size:12.5px;line-height:1.9;color:#CBE0D8;padding:3px 0">
+          <span style="color:#D9A93B;font-weight:700">${i+1}</span><span>${a}</span></div>`).join('')}</div></div>`;
+  } else if(cur.n>0){
+    head=`<div class="card" style="background:#EFF7F2;border-color:#D3E8DC;margin-bottom:12px">
+      <b style="font-size:14px;color:#1F7A55;font-family:'Cairo',sans-serif">أسبوع متوازن</b>
+      <div style="font-size:12.5px;color:var(--ink2);margin-top:4px">كل مؤشراتك ضمن المستهدف. استمر على نفس النسق.</div></div>`;
+  }
+
+  el.innerHTML = head + out.join('') +
+    `<div class="note">القراءة تقارن آخر سبعة أيام بالسبعة التي قبلها. كلما سجّلت أكثر، صارت أدق.</div>`;
 }
 
 /* بدء التشغيل */
