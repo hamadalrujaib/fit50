@@ -406,6 +406,11 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
     </div>
 
     <div class="sec" style="margin-top:16px">
+      <h2>تفصيل اليوم</h2>
+      <div class="card" id="macros"></div>
+    </div>
+
+    <div class="sec">
       <h2>وجبات اليوم</h2>
       <div class="card" id="mealList"></div>
     </div>
@@ -525,33 +530,87 @@ const ROUTINE = [
 ];
 
 const FOODS = [
-  ["صدر دجاج مشوي (150غ)",248,46],["سمك زبيدي مشوي (150غ)",220,34],["سمك هامور مشوي (150غ)",190,36],
-  ["لحم غنم مشوي (150غ)",380,38],["تونة معلبة بالماء (علبة)",100,22],["بيض مسلوق (حبة)",78,6.3],
-  ["عجة بيضتين",180,12],["بروتين واي (سكوب)",120,24],["زبادي يوناني (170غ)",100,17],
-  ["لبن رايب (كوب)",110,8.5],["حليب قليل الدسم (كوب)",105,8],["جبن قريش (100غ)",98,11],
-  ["جبن شرائح (شريحة)",70,4],["فول مدمس (طبق)",190,12],["حمص (طبق صغير)",210,6],
-  ["شوربة عدس (كوب)",180,12],["خبز عربي (رغيف)",165,5.5],["خبز أسمر (شريحة)",80,4],
-  ["أرز أبيض مطبوخ (كوب)",205,4.3],["أرز بني مطبوخ (كوب)",216,5],["برغل مطبوخ (كوب)",150,5.6],
-  ["شوفان (نصف كوب جاف)",150,5],["بطاطس مسلوقة (وسط)",130,3],["مجبوس دجاج (طبق)",550,30],
-  ["سلطة خضراء",60,2],["تبولة (طبق)",120,3],["خضار سوتيه (كوب)",90,3],["شوربة خضار (كوب)",80,3],
-  ["موز (حبة)",105,1.3],["تفاح (حبة)",95,0.5],["برتقال (حبة)",62,1.2],["تمر (3 حبات)",60,0.5],
-  ["لوز (30غ)",173,6],["زبدة فول سوداني (م.ك)",94,4],["زيت زيتون (م.ك)",119,0],
-  ["قهوة سادة",2,0.3],["شاي بدون سكر",2,0],["كرك (كوب)",120,3],
-  ["شاورما دجاج (سندويتش)",400,25],["برجر لحم (ساندويتش)",540,25],["بيتزا (شريحة)",285,12],
-  ["بطاطس مقلية (وسط)",365,4],["شيبس (كيس صغير)",150,2],["حلويات (قطعة)",350,5],
-  ["مشروب غازي (علبة)",140,0],["عصير برتقال (كوب)",112,1.7],
-  ["فول (ملعقتان)",80,5],["فول (نصف طبق)",95,6],["بيض scrambled (بيضة)",110,7],
-  ["خبز ساوردو (شريحة)",120,4],["جبن حلوم (قطعة 30غ)",100,6],["جبن حلوم مقلي (قطعة)",130,6],
-  ["فلافل (حبة)",55,2],["شاي بسكر (ملعقة)",20,0],["شاي بحليب وسكر",70,2],
-  ["شوكولاتة (قطعة صغيرة)",30,0.4],["شوكولاتة (لوح صغير)",210,3],
-  ["زبيدي مقلي (150غ)",280,32],["زبيدي مشوي (150غ)",220,34],["مطبق زبيدي (طبق كامل)",720,40],
-  ["مرق سمك (مغرفة)",60,2],["رطب (حبة)",23,0.2],["آيس كريم (سكوب)",125,2],
-  ["أرز بالسمك (نصف طبق)",280,18],["مجبوس لحم (طبق)",620,32],["بيض مقلي (بيضة)",95,6],
-  ["لبنة (ملعقتان)",70,3],["زعتر بزيت (ملعقة)",90,1],["عسل (ملعقة)",64,0],
-  ["مكسرات مشكلة (30غ)",180,5],["بطيخ (شريحة)",50,1],["خيار (حبة)",16,0.7],
-  ["طماطم (حبة)",22,1],["دجاج مقلي (قطعة)",280,20],["كبسة دجاج (طبق)",580,33],
-  ["سمبوسة (حبة)",90,3],["معجنات جبن (قطعة)",180,6],["كيك (قطعة)",290,4],
-  ["قهوة بحليب",60,3],["ماء غازي دايت",1,0],["بروتين بار",210,20]
+  ["صدر دجاج مشوي (150غ)",248,46,0,0,5.4],
+  ["سمك زبيدي مشوي (150غ)",220,34,0,0,9],
+  ["سمك هامور مشوي (150غ)",190,36,0,0,4],
+  ["لحم غنم مشوي (150غ)",380,38,0,0,25],
+  ["تونة معلبة بالماء (علبة)",100,22,0,0,1],
+  ["بيض مسلوق (حبة)",78,6.3,0.6,0.6,5.3],
+  ["عجة بيضتين",180,12,1,1,14],
+  ["بروتين واي (سكوب)",120,24,3,1,1.5],
+  ["زبادي يوناني (170غ)",100,17,6,5,0.7],
+  ["لبن رايب (كوب)",110,8.5,12,12,2.5],
+  ["حليب قليل الدسم (كوب)",105,8,12,12,2.4],
+  ["جبن قريش (100غ)",98,11,3.4,3,4.3],
+  ["جبن شرائح (شريحة)",70,4,1,0.5,5.5],
+  ["فول مدمس (طبق)",190,12,30,2,3],
+  ["حمص (طبق صغير)",210,6,20,1,12],
+  ["شوربة عدس (كوب)",180,12,30,3,1.5],
+  ["خبز عربي (رغيف)",165,5.5,33,1.5,1],
+  ["خبز أسمر (شريحة)",80,4,14,1.5,1],
+  ["أرز أبيض مطبوخ (كوب)",205,4.3,45,0.1,0.4],
+  ["أرز بني مطبوخ (كوب)",216,5,45,0.7,1.8],
+  ["برغل مطبوخ (كوب)",150,5.6,34,0.2,0.4],
+  ["شوفان (نصف كوب جاف)",150,5,27,0.5,3],
+  ["بطاطس مسلوقة (وسط)",130,3,30,1.4,0.2],
+  ["مجبوس دجاج (طبق)",550,30,70,3,16],
+  ["سلطة خضراء",60,2,7,3,3],
+  ["تبولة (طبق)",120,3,15,2,6],
+  ["خضار سوتيه (كوب)",90,3,10,4,5],
+  ["شوربة خضار (كوب)",80,3,13,4,2],
+  ["موز (حبة)",105,1.3,27,14,0.4],
+  ["تفاح (حبة)",95,0.5,25,19,0.3],
+  ["برتقال (حبة)",62,1.2,15,12,0.2],
+  ["تمر (3 حبات)",60,0.5,16,14,0],
+  ["لوز (30غ)",173,6,6,1.2,15],
+  ["زبدة فول سوداني (م.ك)",94,4,3,1.5,8],
+  ["زيت زيتون (م.ك)",119,0,0,0,13.5],
+  ["قهوة سادة",2,0.3,0,0,0],
+  ["شاي بدون سكر",2,0,0.3,0,0],
+  ["كرك (كوب)",120,3,18,17,4],
+  ["شاورما دجاج (سندويتش)",400,25,40,3,14],
+  ["برجر لحم (ساندويتش)",540,25,42,8,29],
+  ["بيتزا (شريحة)",285,12,36,4,10],
+  ["بطاطس مقلية (وسط)",365,4,48,0.3,17],
+  ["شيبس (كيس صغير)",150,2,15,0.5,10],
+  ["حلويات (قطعة)",350,5,45,30,17],
+  ["مشروب غازي (علبة)",140,0,39,39,0],
+  ["عصير برتقال (كوب)",112,1.7,26,21,0.5],
+  ["فول (ملعقتان)",80,5,12,1,1.2],
+  ["فول (نصف طبق)",95,6,15,1,1.5],
+  ["بيض scrambled (بيضة)",110,7,1,1,9],
+  ["خبز ساوردو (شريحة)",120,4,23,0.8,0.7],
+  ["جبن حلوم (قطعة 30غ)",100,6,1,0.5,8],
+  ["جبن حلوم مقلي (قطعة)",130,6,1,0.5,11],
+  ["فلافل (حبة)",55,2,5,0.3,3],
+  ["شاي بسكر (ملعقة)",20,0,5,5,0],
+  ["شاي بحليب وسكر",70,2,10,9,2],
+  ["شوكولاتة (قطعة صغيرة)",30,0.4,3.4,3,1.8],
+  ["شوكولاتة (لوح صغير)",210,3,24,21,12],
+  ["زبيدي مقلي (150غ)",280,32,6,0,14],
+  ["زبيدي مشوي (150غ)",220,34,0,0,9],
+  ["مطبق زبيدي (طبق كامل)",720,40,85,4,26],
+  ["مرق سمك (مغرفة)",60,2,5,2,3.5],
+  ["رطب (حبة)",23,0.2,6,5,0],
+  ["آيس كريم (سكوب)",125,2,15,14,6.5],
+  ["أرز بالسمك (نصف طبق)",280,18,35,1,8],
+  ["مجبوس لحم (طبق)",620,32,72,3,24],
+  ["بيض مقلي (بيضة)",95,6,0.5,0.4,7.5],
+  ["لبنة (ملعقتان)",70,3,2,2,6],
+  ["زعتر بزيت (ملعقة)",90,1,3,0,8],
+  ["عسل (ملعقة)",64,0,17,17,0],
+  ["مكسرات مشكلة (30غ)",180,5,6,1.5,16],
+  ["بطيخ (شريحة)",50,1,12,10,0.2],
+  ["خيار (حبة)",16,0.7,3.6,1.7,0.1],
+  ["طماطم (حبة)",22,1,4.8,3.2,0.2],
+  ["دجاج مقلي (قطعة)",280,20,10,0,18],
+  ["كبسة دجاج (طبق)",580,33,75,4,17],
+  ["سمبوسة (حبة)",90,3,9,0.5,5],
+  ["معجنات جبن (قطعة)",180,6,20,2,8],
+  ["كيك (قطعة)",290,4,40,26,13],
+  ["قهوة بحليب",60,3,6,6,2.5],
+  ["ماء غازي دايت",1,0,0,0,0],
+  ["بروتين بار",210,20,22,3,7]
 ];
 
 const LABS = [];
@@ -739,7 +798,7 @@ function render(){
      <div class="qa">${q[1]}</div>
      ${st>1?`<div class="streak">🔥 ${st} أيام متتالية</div>`:''}</div>`;
 
-  renderRoutine(); renderEnergy(); renderMeals(); renderKpis();
+  renderRoutine(); renderEnergy(); renderMeals(); renderMacros(); renderKpis();
   renderInfo(); renderBadges(); renderHeat(); renderMove(); renderActSel();
   renderLabs(); renderSupps(); renderAppts();
 }
@@ -927,30 +986,33 @@ function searchFood(){
   const r=FOODS.filter(f=>f[0].includes(q)).slice(0,14);
   if(!r.length){ box.innerHTML=`<div style="padding:14px;font-size:13px;color:#7D908A">لا نتائج — استخدم زر إضافة صنف.</div>`; return; }
   box.innerHTML=r.map(f=>
-    `<div class="fitem"><div class="fn">${f[0]}</div><div class="fk">${f[1]} سعرة · ${f[2]} غ</div>
-     <button class="add" onclick="qty('${f[0].replace(/'/g,"")}',${f[1]},${f[2]})">+</button></div>`).join('');
+    `<div class="fitem"><div class="fn">${f[0]}
+       <div style="font-size:10.5px;color:#9AACA6;margin-top:1px">نشويات ${f[3]} · سكر ${f[4]} · دهون ${f[5]}</div></div>
+     <div class="fk">${f[1]} سعرة · بروتين ${f[2]}</div>
+     <button class="add" onclick="qty('${f[0].replace(/'/g,"")}',${f[1]},${f[2]},${f[3]},${f[4]},${f[5]})">+</button></div>`).join('');
 }
-function addFood(n,k,p){
+function addFood(n,k,p,c,su,f){
   const t=today();
   S.nutrition[t]=S.nutrition[t]||[];
-  S.nutrition[t].push({n:n,k:k,p:p});
-  save(); renderEnergy(); renderMeals(); renderBadges(); renderInfo();
+  S.nutrition[t].push({n:n,k:k,p:p,c:c||0,su:su||0,f:f||0});
+  save(); renderEnergy(); renderMeals(); renderBadges(); renderInfo(); renderMacros();
   toast("أُضيف: "+n);
 }
 function renderMeals(){
   const t=today(); const m=S.nutrition[t]||[];
   const el=document.getElementById('mealList');
   if(!m.length){ el.innerHTML=`<div class="empty">لم تسجّل شيئًا اليوم بعد.</div>`; return; }
-  const k=m.reduce((a,x)=>a+x.k,0), p=m.reduce((a,x)=>a+x.p,0);
+  const k=m.reduce((a,x)=>a+x.k,0), p=m.reduce((a,x)=>a+x.p,0), d=dayMacros();
   el.innerHTML=m.map((x,i)=>
-    `<div class="row"><div class="rt"><b>${x.n}</b><span>${x.p} غ بروتين</span></div>
+    `<div class="row"><div class="rt"><b>${x.n}</b>
+       <span>بروتين ${x.p} · نشويات ${x.c||0} · سكر ${x.su||0} · دهون ${x.f||0}</span></div>
      <div class="rr">${x.k}</div><button class="x" onclick="delMeal(${i})">×</button></div>`).join('')
    +`<div class="row" style="border-top:2px solid #E3EAE7;border-bottom:none">
-      <div class="rt"><b>المجموع</b><span>${Math.round(p)} غ بروتين</span></div>
+      <div class="rt"><b>المجموع</b><span>بروتين ${Math.round(d.p)} · نشويات ${Math.round(d.c)} · سكر ${Math.round(d.su)} · دهون ${Math.round(d.f)}</span></div>
       <div class="rr" style="font-size:17px">${Math.round(k)}</div></div>`;
 }
 function delMeal(i){
-  const t=today(); S.nutrition[t].splice(i,1); save(); renderEnergy(); renderMeals();
+  const t=today(); S.nutrition[t].splice(i,1); save(); renderEnergy(); renderMeals(); renderMacros();
 }
 function openCustom(){
   document.getElementById('sheet').innerHTML=
@@ -962,6 +1024,11 @@ function openCustom(){
         <div><label class="f">السعرات</label><input class="in" id="cK" type="number" inputmode="numeric"></div>
         <div><label class="f">بروتين (غ)</label><input class="in" id="cP" type="number" inputmode="decimal"></div>
       </div>
+      <div class="grid3">
+        <div><label class="f">نشويات</label><input class="in" id="cC" type="number" inputmode="decimal"></div>
+        <div><label class="f">سكريات</label><input class="in" id="cSu" type="number" inputmode="decimal"></div>
+        <div><label class="f">دهون</label><input class="in" id="cF" type="number" inputmode="decimal"></div>
+      </div>
       <button class="btn" onclick="saveCustom()">أضف</button>
       <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
     </div></div>`;
@@ -971,7 +1038,8 @@ function saveCustom(){
   const k=parseFloat(document.getElementById('cK').value);
   const p=parseFloat(document.getElementById('cP').value)||0;
   if(!n||!k){ toast("أدخل الاسم والسعرات"); return; }
-  addFood(n,k,p); closeSheet();
+  const num=id=>parseFloat(document.getElementById(id).value)||0;
+  addFood(n,k,p,num('cC'),num('cSu'),num('cF')); closeSheet();
 }
 function closeSheet(){ document.getElementById('sheet').innerHTML=''; }
 
@@ -1423,14 +1491,14 @@ function onShot(inp){
 }
 
 const CATS=[
- {n:"لحم أو دجاج أو سمك", k:1.7, p:0.26},
- {n:"أرز أو مكرونة أو برغل", k:1.3, p:0.03},
- {n:"خبز أو معجنات", k:2.7, p:0.09},
- {n:"بقوليات (فول، عدس، حمص)", k:1.2, p:0.07},
- {n:"خضار مطبوخ أو سلطة", k:0.55, p:0.02},
- {n:"مقليات", k:3.1, p:0.04},
- {n:"حلويات", k:3.6, p:0.05},
- {n:"فاكهة", k:0.6, p:0.01}
+ {n:"لحم أو دجاج أو سمك", k:1.7, p:0.26, c:0.00, su:0.00, f:0.08},
+ {n:"أرز أو مكرونة أو برغل", k:1.3, p:0.03, c:0.28, su:0.00, f:0.01},
+ {n:"خبز أو معجنات", k:2.7, p:0.09, c:0.50, su:0.03, f:0.03},
+ {n:"بقوليات (فول، عدس، حمص)", k:1.2, p:0.07, c:0.19, su:0.01, f:0.02},
+ {n:"خضار مطبوخ أو سلطة", k:0.55, p:0.02, c:0.07, su:0.03, f:0.02},
+ {n:"مقليات", k:3.1, p:0.04, c:0.30, su:0.01, f:0.18},
+ {n:"حلويات", k:3.6, p:0.05, c:0.48, su:0.33, f:0.16},
+ {n:"فاكهة", k:0.6, p:0.01, c:0.15, su:0.12, f:0.00}
 ];
 const PORTIONS=[
  {n:"صغيرة · نصف كف", g:80},
@@ -1484,12 +1552,17 @@ function calcEst(){
          <div style="font-size:11px;color:#7D908A">سعرة تقديرية</div></div>
        <div style="flex:1"><div class="hero-num" style="font-size:27px;font-weight:700;color:#C9922B">${pr}</div>
          <div style="font-size:11px;color:#7D908A">غرام بروتين</div></div>
-     </div></div>`;
+     </div>
+     <div style="text-align:center;font-size:11.5px;color:#7D908A;margin-top:9px;
+       border-top:1px dashed #E3EAE7;padding-top:8px">
+       نشويات ${Math.round(c.c*p.g)} · سكر ${Math.round(c.su*p.g)} · دهون ${Math.round(c.f*p.g)} غرامًا</div>
+     </div>`;
 }
 function saveShot(){
   if(pickCat==null||pickPortion==null){ toast("اختر نوع الطبق وحجمه"); return; }
   const c=CATS[pickCat], p=PORTIONS[pickPortion];
-  addFood(c.n+" — "+p.n, Math.round(c.k*p.g), Math.round(c.p*p.g));
+  const r=x=>Math.round(x*p.g*10)/10;
+  addFood(c.n+" — "+p.n, Math.round(c.k*p.g), r(c.p), r(c.c), r(c.su), r(c.f));
   closeSheet();
 }
 
@@ -1600,13 +1673,13 @@ function saveMove(){
    اختيار الكمية
    ============================================================ */
 const QTY=[[0.25,"ربع"],[0.5,"نصف"],[0.75,"ثلاثة أرباع"],[1,"حصة"],[1.5,"حصة ونصف"],[2,"حصتان"],[3,"ثلاث"]];
-let qN,qK,qP;
-function qty(n,k,p){
-  qN=n; qK=k; qP=p;
+let qN,qK,qP,qC,qSu,qF;
+function qty(n,k,p,c,su,f){
+  qN=n; qK=k; qP=p; qC=c||0; qSu=su||0; qF=f||0;
   document.getElementById('sheet').innerHTML=
   `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
      <h3>${n}</h3>
-     <div class="sub">حصة واحدة = ${k} سعرة · ${p} غ بروتين</div>
+     <div class="sub">حصة واحدة = ${k} سعرة · بروتين ${p} · نشويات ${qC} · سكر ${qSu} · دهون ${qF}</div>
      <div class="chipsel">
        ${QTY.map(q=>`<button onclick="addQ(${q[0]})">${q[1]}</button>`).join('')}
      </div>
@@ -1623,8 +1696,69 @@ function addQ(m){
   }
   if(!m||m<=0){ toast("أدخل كمية صحيحة"); return; }
   const lab = m===1 ? qN : qN+" ×"+m;
-  addFood(lab, Math.round(qK*m), Math.round(qP*m*10)/10);
+  const r=x=>Math.round(x*m*10)/10;
+  addFood(lab, Math.round(qK*m), r(qP), r(qC), r(qSu), r(qF));
   closeSheet();
+}
+
+
+/* ============================================================
+   تفصيل الماكروز
+   ============================================================ */
+const MACROS=[
+ {k:"p",  n:"بروتين", c:"#2F8F6E", kcal:4, tgt:()=>S.protTarget},
+ {k:"c",  n:"نشويات", c:"#C08F16", kcal:4, tgt:()=>Math.round(S.target*0.42/4)},
+ {k:"f",  n:"دهون",   c:"#B4531F", kcal:9, tgt:()=>Math.round(S.target*0.30/9)},
+ {k:"su", n:"سكريات", c:"#9E2B36", kcal:4, tgt:()=>Math.round(S.target*0.10/4), sub:true}
+];
+
+function dayMacros(){
+  const m=S.nutrition[today()]||[];
+  const o={k:0,p:0,c:0,su:0,f:0};
+  m.forEach(x=>{ o.k+=x.k||0; o.p+=x.p||0; o.c+=x.c||0; o.su+=x.su||0; o.f+=x.f||0; });
+  return o;
+}
+
+function renderMacros(){
+  const el=document.getElementById('macros'); if(!el) return;
+  const d=dayMacros();
+  if(!d.k){ el.innerHTML=`<div class="empty">سجّل وجبة لعرض التفصيل.</div>`; return; }
+
+  // نسب الطاقة من الثلاثة الكبار
+  const eP=d.p*4, eC=d.c*4, eF=d.f*9;
+  const tot=eP+eC+eF||1;
+  const pct=[eP/tot*100, eC/tot*100, eF/tot*100];
+  const cols=["#2F8F6E","#C08F16","#B4531F"];
+  const nms=["بروتين","نشويات","دهون"];
+  const C=2*Math.PI*34; let off=0, arcs='';
+  pct.forEach((v,i)=>{
+    if(v<=0) return;
+    const len=C*(v/100);
+    arcs+=`<circle cx="45" cy="45" r="34" fill="none" stroke="${cols[i]}" stroke-width="15"
+      stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"/>`;
+    off+=len;
+  });
+
+  const bars = MACROS.map(m=>{
+    const v=Math.round(d[m.k]*10)/10, t=m.tgt();
+    const over = m.sub ? v>t : false;
+    return `<div class="bar" style="margin-bottom:11px">
+      <div class="bl"><span>${m.n}${m.sub?' <span style="font-size:10px;color:#9AACA6">(ضمن النشويات)</span>':''}</span>
+        <b style="color:${over?'#9E2B36':'inherit'}">${v} / ${t} غ</b></div>
+      <div class="track"><div class="fill" style="width:${Math.min(100,v/t*100)}%;background:${over?'#9E2B36':m.c}"></div></div>
+    </div>`;
+  }).join('');
+
+  const sugarPct=Math.round(d.su*4/(d.k||1)*100);
+  let tip='';
+  if(sugarPct>=15) tip=`<div class="warn" style="margin-top:11px">السكريات ${sugarPct}٪ من طاقة اليوم. هذا البند الأكثر تأثيرًا على الكبد الدهني — الهدف أقل من 10٪ — أي نحو ${Math.round(S.target*0.10/4)} غرامًا.</div>`;
+  else if(d.p < S.protTarget*0.7) tip=`<div class="warn" style="margin-top:11px">البروتين أقل من المطلوب بـ${Math.round(S.protTarget-d.p)} غرامًا. البروتين يحمي عضلاتك أثناء النزول.</div>`;
+
+  el.innerHTML=`<div class="donut" style="margin-bottom:14px">
+      <svg width="90" height="90" viewBox="0 0 90 90" style="transform:rotate(-90deg);flex:none">${arcs}</svg>
+      <div class="dlg">${pct.map((v,i)=>`<div><i style="background:${cols[i]}"></i>
+        <span style="flex:1">${nms[i]}</span><b>${Math.round(v)}٪</b></div>`).join('')}</div>
+    </div>${bars}${tip}`;
 }
 
 /* بدء التشغيل */
