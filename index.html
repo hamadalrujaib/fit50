@@ -1,261 +1,1009 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fit50 - المنظومة الصحية والرياضية المتقدمة</title>
-    <style>
-        :root {
-            --primary: #10b981;
-            --primary-dark: #059669;
-            --accent: #3b82f6;
-            --bg: #090d16;
-            --card-bg: #131c31;
-            --card-border: rgba(255, 255, 255, 0.08);
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --warning: #f59e0b;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
-            padding-bottom: 90px;
-        }
-        .header {
-            background: linear-gradient(135deg, #131c31 0%, #1e293b 100%);
-            padding: 20px;
-            border-bottom: 1px solid var(--card-border);
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header h1 { color: var(--primary); margin: 0; font-size: 22px; font-weight: 800; }
-        .header p { color: var(--text-muted); font-size: 12px; margin: 4px 0 0; }
-        .container { max-width: 650px; margin: 0 auto; padding: 15px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 15px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        }
-        .card h2 { font-size: 16px; margin-top: 0; margin-bottom: 15px; color: var(--primary); }
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
-        .stat-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 14px;
-            border-radius: 14px;
-            text-align: center;
-        }
-        .stat-value { font-size: 22px; font-weight: 800; color: var(--text); }
-        .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-        }
-        button.btn {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            border: none;
-            padding: 13px;
-            border-radius: 12px;
-            font-size: 15px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-        .nav-bar {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--card-border);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 5px;
-            z-index: 1000;
-        }
-        .nav-item {
-            background: none; border: none;
-            color: var(--text-muted);
-            font-size: 11px;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            cursor: pointer; flex: 1;
-        }
-        .nav-item.active { color: var(--primary); font-weight: bold; }
-        .log-item {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 10px 14px; border-radius: 10px;
-            margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 13px;
-        }
-        .ai-camera-box {
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; position: relative;
-        }
-        .ai-camera-box input[type="file"] {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
-        }
-        #preview-img { max-width: 100%; max-height: 200px; border-radius: 10px; margin-top: 10px; display: none; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0C3B32">
+<title>Fit50</title>
+<meta name="apple-mobile-web-app-title" content="Fit50">
+<meta name="description" content="متابعة التمرين والتغذية والقياسات الصحية">
+<style>
+:root{
+  --ink:#0F1F1B; --ink2:#3A4F48; --mute:#7D908A; --line:#E3EAE7;
+  --bg:#F6F8F7; --card:#FFFFFF;
+  --green:#0C3B32; --green2:#175E4E; --gold:#C9922B;
+  --red:#9E2B36; --blue:#1C6E8C; --purple:#6C4A9C; --terra:#B4531F; --leaf:#2F7A3E;
+  --ok:#2F8F6E;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Arabic","Segoe UI",Tahoma,sans-serif;
+  background:var(--bg); color:var(--ink); direction:rtl;
+  font-size:15px; line-height:1.6; overscroll-behavior-y:none;
+}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button{background:none;border:none;cursor:pointer}
+.hide{display:none !important}
+
+/* ---------- shell ---------- */
+#app{padding-top:calc(var(--safe-t) + 0px);padding-bottom:calc(76px + var(--safe-b))}
+.screen{display:none;animation:in .18s ease}
+.screen.on{display:block}
+@keyframes in{from{opacity:.4}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.screen{animation:none}}
+
+.head{
+  background:linear-gradient(200deg,var(--green2),var(--green) 62%,#061F19);
+  color:#fff;padding:calc(var(--safe-t) + 20px) 18px 20px;
+}
+.head .hi{font-size:12px;color:#8FCBB8;letter-spacing:.2px}
+.head .tl{font-size:11.5px;color:#7FBFA9;margin-top:1px;letter-spacing:.3px}
+.head h1{font-size:23px;font-weight:800;letter-spacing:-.3px;margin-top:2px}
+.head .dt{font-size:12px;color:#A9CFC1;margin-top:4px}
+
+.wrap{padding:14px 14px 0}
+.sec{margin-bottom:16px}
+.sec > h2{font-size:13px;font-weight:700;color:var(--ink2);margin:0 2px 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card + .card{margin-top:10px}
+
+/* ---------- rings / stats ---------- */
+.ringrow{display:flex;align-items:center;gap:14px}
+.ring{width:96px;height:96px;flex:none;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring .rv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .rv b{font-size:19px;font-weight:800;letter-spacing:-.5px}
+.ring .rv span{font-size:10px;color:var(--mute)}
+.bars{flex:1;min-width:0}
+.bar{margin-bottom:9px}
+.bar:last-child{margin-bottom:0}
+.bar .bl{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);margin-bottom:4px}
+.bar .bl b{font-weight:700}
+.track{height:7px;background:#EDF2F0;border-radius:6px;overflow:hidden}
+.fill{height:100%;border-radius:6px;transition:width .35s ease}
+
+.kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 10px;text-align:center}
+.kpi b{display:block;font-size:19px;font-weight:800;letter-spacing:-.4px}
+.kpi span{font-size:10.5px;color:var(--mute)}
+
+/* ---------- today plan ---------- */
+.plan{display:flex;align-items:center;gap:12px;border-radius:14px;padding:14px;color:#fff}
+.plan .pi{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.16);flex:none;display:flex;align-items:center;justify-content:center;font-size:18px}
+.plan .pt{flex:1;min-width:0}
+.plan .pt b{display:block;font-size:16px;font-weight:800}
+.plan .pt span{font-size:12px;opacity:.88}
+.plan .pd{font-size:12px;font-weight:700;background:rgba(255,255,255,.18);padding:5px 10px;border-radius:20px;flex:none}
+
+.steps{margin-top:10px}
+.step{display:flex;gap:9px;font-size:13.5px;color:var(--ink2);padding:5px 0;border-bottom:1px dashed var(--line)}
+.step:last-child{border-bottom:none}
+.step i{font-style:normal;color:#B4C2BD;font-size:11px;min-width:16px;padding-top:2px}
+
+/* ---------- checklist ---------- */
+.chk{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.chk:last-child{border-bottom:none}
+.box{width:23px;height:23px;border-radius:7px;border:1.5px solid #C8D5D0;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.box.on{background:var(--ok);border-color:var(--ok)}
+.chk .ct{flex:1;font-size:14px}
+.chk .ct small{display:block;font-size:11.5px;color:var(--mute)}
+.chk.done .ct{color:var(--mute);text-decoration:line-through}
+
+/* ---------- forms ---------- */
+label.f{display:block;font-size:12px;color:var(--ink2);margin:10px 0 5px;font-weight:600}
+.in{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.in:focus{outline:2px solid #BCD9CD;outline-offset:1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn{
+  display:block;width:100%;background:var(--green);color:#fff;padding:13px;
+  border-radius:12px;font-weight:700;font-size:15px;margin-top:14px
+}
+.btn.g{background:var(--gold);color:#3A2A05}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink2)}
+.btn:active{transform:scale(.99)}
+.seg{display:flex;background:#EDF2F0;border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink2)}
+.seg button.on{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(0,0,0,.07)}
+
+/* ---------- list rows ---------- */
+.row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.row .rt{flex:1;min-width:0}
+.row .rt b{display:block;font-size:14px;font-weight:700}
+.row .rt span{font-size:11.5px;color:var(--mute)}
+.row .rr{text-align:left;font-size:13px;font-weight:700;flex:none}
+.row .x{color:#C77;font-size:18px;padding:0 4px;flex:none}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px}
+
+/* ---------- food search dropdown ---------- */
+.search-box{position:relative}
+.fres{
+  position:absolute;top:100%;right:0;left:0;background:#fff;
+  border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 25px rgba(0,0,0,.1);
+  max-height:220px;overflow-y:auto;z-index:20;margin-top:4px;display:none
+}
+.fres.active{display:block}
+.fitem{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+.fitem:hover{background:#F6F8F7}
+.fitem:last-child{border-bottom:none}
+.fitem .fn{flex:1;font-size:13.5px}
+.fitem .fk{font-size:11.5px;color:var(--mute);flex:none}
+
+/* ---------- chart ---------- */
+.chart{width:100%;height:150px;display:block}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--mute);margin-top:6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-left:4px}
+
+/* ---------- lab ---------- */
+.lab{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lab:last-child{border-bottom:none}
+.lab .ln{flex:1}
+.lab .ln b{font-size:14px;font-weight:700;display:block}
+.lab .ln span{font-size:11px;color:var(--mute)}
+.lab .lv{font-size:15px;font-weight:800;letter-spacing:-.3px}
+
+/* ---------- nav ---------- */
+nav{
+  position:fixed;bottom:0;right:0;left:0;background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);display:flex;
+  padding-bottom:var(--safe-b);z-index:50
+}
+nav button{flex:1;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#9AACA6;font-size:10px}
+nav button.on{color:var(--green)}
+nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- toast / modal ---------- */
+#toast{
+  position:fixed;bottom:calc(88px + var(--safe-b));right:16px;left:16px;background:var(--green);
+  color:#fff;padding:13px 16px;border-radius:13px;font-size:14px;text-align:center;
+  z-index:99;opacity:0;transform:translateY(10px);transition:.22s;pointer-events:none
+}
+#toast.on{opacity:1;transform:none}
+.sheet{position:fixed;inset:0;background:rgba(10,25,20,.45);z-index:80;display:flex;align-items:flex-end}
+.sheet .sc{background:#fff;width:100%;border-radius:20px 20px 0 0;padding:18px 16px calc(20px + var(--safe-b));max-height:88vh;overflow-y:auto}
+.sheet h3{font-size:17px;font-weight:800;margin-bottom:4px}
+.sheet .sub{font-size:12.5px;color:var(--mute);margin-bottom:10px}
+.empty{text-align:center;padding:26px 10px;color:var(--mute);font-size:13.5px}
+.note{font-size:12px;color:var(--mute);line-height:1.75;margin-top:10px}
+.warn{background:#FFF6E8;border:1px solid #F0DDB8;border-radius:11px;padding:11px 13px;font-size:12.5px;color:#6B4E13;line-height:1.7}
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Fit50 Pro</h1>
-        <p>نظامك الصحي المتكامل (عمر 50+)</p>
+<div id="app">
+
+<!-- ==================== اليوم ==================== -->
+<section class="screen on" id="s-today">
+  <div class="head">
+    <div class="hi" id="greet">مرحبًا</div>
+    <h1 style="font-size:27px;letter-spacing:-.8px">Fit50</h1>
+    <div class="tl">اللياقة والصحة بعد الخمسين</div>
+    <div class="dt" id="todayDate"></div>
+    <div class="dt" id="saveState" style="margin-top:6px;display:flex;align-items:center"></div>
+  </div>
+  <div class="wrap">
+
+    <div class="sec">
+      <div id="planCard"></div>
     </div>
 
-    <div class="container">
-        <!-- قسم الرئيسية -->
-        <div id="tab-dashboard" class="tab-content active">
-            <div class="card">
-                <h2>📊 المؤشرات الحيوية</h2>
-                <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-value">76 كغ</div><div class="stat-label">الوزن الحالي</div></div>
-                    <div class="stat-box"><div class="stat-value">171 سم</div><div class="stat-label">الطول</div></div>
-                    <div class="stat-box"><div class="stat-value">5.7%</div><div class="stat-label">HbA1c التراكمي</div></div>
-                    <div class="stat-box"><div class="stat-value">450</div><div class="stat-label">فيتامين B12</div></div>
-                </div>
+    <div class="sec">
+      <h2>الطاقة اليوم</h2>
+      <div class="card">
+        <div class="ringrow">
+          <div class="ring">
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="40" stroke="#EDF2F0" stroke-width="10" fill="none"/>
+              <circle id="ringArc" cx="48" cy="48" r="40" stroke="#0C3B32" stroke-width="10" fill="none"
+                stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+            </svg>
+            <div class="rv"><b id="kcalLeft">—</b><span>سعرة متبقية</span></div>
+          </div>
+          <div class="bars">
+            <div class="bar">
+              <div class="bl"><span>مأكول</span><b id="kcalIn">0</b></div>
+              <div class="track"><div class="fill" id="fKcal" style="width:0;background:#0C3B32"></div></div>
             </div>
-            <div class="card">
-                <h2>⚡ شريط التحفيز</h2>
-                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">الاستمرارية في عمر الخمسين هي مفتاح الحيوية والشباب الدائم.</p>
+            <div class="bar">
+              <div class="bl"><span>بروتين</span><b id="protTxt">0 / 115 غ</b></div>
+              <div class="track"><div class="fill" id="fProt" style="width:0;background:#C9922B"></div></div>
             </div>
+            <div class="bar">
+              <div class="bl"><span>ماء</span><b id="waterTxt">0 / 8 أكواب</b></div>
+              <div class="track"><div class="fill" id="fWater" style="width:0;background:#1C6E8C"></div></div>
+            </div>
+          </div>
         </div>
-
-        <!-- قسم التمارين -->
-        <div id="tab-workouts" class="tab-content">
-            <div class="card">
-                <h2>🏋️ سجل التمارين</h2>
-                <select id="exercise-type">
-                    <option value="مقاومة علوي">مقاومة علوي</option>
-                    <option value="مقاومة سفلي وبطن">مقاومة سفلي وبطن</option>
-                    <option value="كارديو ومشي">كارديو ومشي</option>
-                </select>
-                <input type="text" id="exercise-details" placeholder="التفاصيل (مثلاً: 3 مجموعات، 12 تكرار)">
-                <button class="btn" onclick="addExercise()">تسجيل التمرين</button>
-            </div>
-            <div class="card">
-                <h2>📜 سجل الأداء</h2>
-                <div id="exercise-logs"><p style="color: var(--text-muted); font-size: 13px; text-align: center;">لا توجد تمارين مسجلة</p></div>
-            </div>
-        </div>
-
-        <!-- قسم التغذية -->
-        <div id="tab-nutrition" class="tab-content">
-            <div class="card">
-                <h2>🍎 عداد السعرات</h2>
-                <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-value" id="total-cals">0</div><div class="stat-label">السعرات</div></div>
-                    <div class="stat-box"><div class="stat-value" id="total-protein">0 غ</div><div class="stat-label">البروتين</div></div>
-                </div>
-                <input type="text" id="meal-name" placeholder="اسم الوجبة">
-                <input type="number" id="meal-cals" placeholder="السعرات الحرارية">
-                <input type="number" id="meal-protein" placeholder="البروتين (غ)">
-                <button class="btn" onclick="addMeal()">إضافة وجبة</button>
-            </div>
-        </div>
-
-        <!-- قسم الكاميرا الذكية -->
-        <div id="tab-ai" class="tab-content">
-            <div class="card">
-                <h2>📸 تحليل الوجبة بالكاميرا</h2>
-                <div class="ai-camera-box">
-                    <div>اضغط لاختيار أو تصوير الوجبة</div>
-                    <input type="file" accept="image/*" capture="environment" onchange="analyzeMealImage(event)">
-                </div>
-                <img id="preview-img" alt="معاينة">
-                <div id="ai-analysis-result" style="margin-top: 15px; font-size: 13px;"></div>
-            </div>
-        </div>
-
-        <!-- قسم التحاليل الطبية -->
-        <div id="tab-medical" class="tab-content">
-            <div class="card">
-                <h2>🩺 السجل الطبي والأدوية</h2>
-                <p style="font-size: 13px; color: var(--text-muted);">تم حفظ وتأمين سجلك الطبي والدوائي بنجاح.</p>
-            </div>
-        </div>
+        <button class="btn ghost" style="margin-top:12px" onclick="addWater()">أضف كوب ماء</button>
+      </div>
     </div>
 
-    <!-- الشريط السفلي للتنقل -->
-    <div class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('dashboard', this)">الرئيسية</button>
-        <button class="nav-item" onclick="switchTab('workouts', this)">التمارين</button>
-        <button class="nav-item" onclick="switchTab('nutrition', this)">التغذية</button>
-        <button class="nav-item" onclick="switchTab('ai', this)">AI كاميرا</button>
-        <button class="nav-item" onclick="switchTab('medical', this)">التحاليل</button>
+    <div class="sec">
+      <h2>روتين اليوم</h2>
+      <div class="card" id="routine"></div>
     </div>
 
-    <script>
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            btn.classList.add('active');
-        }
-        function addMeal() {
-            let name = document.getElementById('meal-name').value;
-            let cals = parseInt(document.getElementById('meal-cals').value) || 0;
-            let protein = parseInt(document.getElementById('meal-protein').value) || 0;
-            if(!name) return alert('أدخل اسم الوجبة');
-            let data = JSON.parse(localStorage.getItem('fit50_nut')) || {cals:0, protein:0};
-            data.cals += cals; data.protein += protein;
-            localStorage.setItem('fit50_nut', JSON.stringify(data));
-            updateUI();
-            alert('تمت الإضافة بنجاح');
-        }
-        function addExercise() {
-            let type = document.getElementById('exercise-type').value;
-            let details = document.getElementById('exercise-details').value;
-            if(!details) return alert('أدخل التفاصيل');
-            let list = JSON.parse(localStorage.getItem('fit50_ex')) || [];
-            list.unshift({type, details, date: new Date().toLocaleDateString()});
-            localStorage.setItem('fit50_ex', JSON.stringify(list));
-            updateUI();
-            alert('تم تسجيل التمرين');
-        }
-        function updateUI() {
-            let nut = JSON.parse(localStorage.getItem('fit50_nut')) || {cals:0, protein:0};
-            document.getElementById('total-cals').innerText = nut.cals;
-            document.getElementById('total-protein').innerText = nut.protein + ' غ';
-            let list = JSON.parse(localStorage.getItem('fit50_ex')) || [];
-            let container = document.getElementById('exercise-logs');
-            if(list.length === 0) return;
-            container.innerHTML = list.map(ex => `<div class="log-item"><span><b>${ex.type}</b>: ${ex.details}</span><span>${ex.date}</span></div>`).join('');
-        }
-        function analyzeMealImage(e) {
-            let file = e.target.files[0];
-            if(!file) return;
-            let reader = new FileReader();
-            reader.onload = function(evt) {
-                document.getElementById('preview-img').src = evt.target.result;
-                document.getElementById('preview-img').style.display = 'block';
-                document.getElementById('ai-analysis-result').innerHTML = '<span style="color:var(--warning)">⏳ جاري التحليل...</span>';
-                setTimeout(() => {
-                    document.getElementById('ai-analysis-result').innerHTML = '<b>تقدير الوجبة:</b> طبق صحي (~400 سعرة، 35غ بروتين)';
-                }, 1200);
-            }
-            reader.readAsDataURL(file);
-        }
-        document.addEventListener('DOMContentLoaded', updateUI);
-    </script>
+    <div class="sec">
+      <h2>آخر القياسات</h2>
+      <div class="kpis">
+        <div class="kpi"><b id="kWeight">—</b><span>الوزن كجم</span></div>
+        <div class="kpi"><b id="kRec">—</b><span>نبض التعافي</span></div>
+        <div class="kpi"><b id="kWeek">—</b><span>دقائق الأسبوع</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== التمرين ==================== -->
+<section class="screen" id="s-train">
+  <div class="head">
+    <div class="hi">الأحد إلى الخميس · الجمعة والسبت راحة</div>
+    <h1>التمرين</h1>
+  </div>
+  <div class="wrap">
+    <div class="seg" style="margin-bottom:14px">
+      <button class="on" onclick="segTrain(0,this)">تسجيل جلسة</button>
+      <button onclick="segTrain(1,this)">الجدول الأسبوعي</button>
+      <button onclick="segTrain(2,this)">السجل</button>
+    </div>
+
+    <!-- تسجيل -->
+    <div id="t0">
+      <div class="card">
+        <label class="f">اختر تمرين اليوم المقترح أو خصص</label>
+        <select class="in" id="wType" onchange="autoFillWorkout(this.value)">
+          <option value="مشي على التردميل">الأحد: أثقال كامل الجسم + مشي (30 دقيقة)</option>
+          <option value="كارديو فترات">الاثنين: كارديو فترات - قياس التعافي (30 دقيقة)</option>
+          <option value="أثقال — علوي">الثلاثاء: أثقال علوي آمن للكتف + بطن (40 دقيقة)</option>
+          <option value="مشي ثابت طويل بميل">الأربعاء: مشي ثابت طويل بميل + سباحة (45 دقيقة)</option>
+          <option value="أثقال — سفلي">الخميس: أثقال سفلي + مشي متدرج (45 دقيقة)</option>
+          <option value="راحة">الجمعة / السبت: راحة أو مشي خفيف</option>
+          <option value="أخرى">جلسة مخصصة أخرى</option>
+        </select>
+        <div class="grid2">
+          <div><label class="f">المدة (دقيقة)</label><input class="in" id="wMin" type="number" inputmode="numeric" placeholder="30"></div>
+          <div><label class="f">المسافة (كم)</label><input class="in" id="wKm" type="number" inputmode="decimal" placeholder="2.9"></div>
+        </div>
+        <div class="grid3">
+          <div><label class="f">نبض متوسط</label><input class="in" id="wAvg" type="number" inputmode="numeric" placeholder="117"></div>
+          <div><label class="f">نبض أقصى</label><input class="in" id="wMax" type="number" inputmode="numeric" placeholder="153"></div>
+          <div><label class="f">بعد 60 ثانية</label><input class="in" id="wRec" type="number" inputmode="numeric" placeholder="128"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="f">السعرات</label><input class="in" id="wKcal" type="number" inputmode="numeric" placeholder="158"></div>
+          <div><label class="f">الميل ٪</label><input class="in" id="wInc" type="number" inputmode="decimal" placeholder="2"></div>
+        </div>
+        <label class="f">ملاحظة</label>
+        <input class="in" id="wNote" placeholder="كيف كان إحساسك؟">
+        <button class="btn" onclick="saveWorkout()">احفظ الجلسة</button>
+        <div class="note">اختر التمرين المقترح من القائمة لتعبئة البيانات تلقائياً، أو عدلها حسب جهازك.</div>
+      </div>
+      <div id="cmp"></div>
+    </div>
+
+    <!-- الجدول -->
+    <div id="t1" class="hide"></div>
+
+    <!-- السجل -->
+    <div id="t2" class="hide"></div>
+  </div>
+</section>
+
+<!-- ==================== التغذية ==================== -->
+<section class="screen" id="s-food">
+  <div class="head">
+    <div class="hi">الهدف اليومي <span id="hTarget">1850</span> سعرة · بروتين 115 غرامًا</div>
+    <h1>التغذية</h1>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <label class="f">ابحث عن صنف الطعام (اكتب للاختيار السريع)</label>
+      <div class="search-box">
+        <input class="in" id="fq" placeholder="ابحث هنا: دجاج، أرز، لبن..." oninput="searchFood()" autocomplete="off">
+        <div class="fres" id="fres"></div>
+      </div>
+      <button class="btn ghost" style="margin-top:10px" onclick="openCustom()">أضف صنفًا جديدًا غير موجود</button>
+    </div>
+
+    <div class="sec" style="margin-top:16px">
+      <h2>وجبات اليوم</h2>
+      <div class="card" id="mealList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== التقدّم ==================== -->
+<section class="screen" id="s-prog">
+  <div class="head">
+    <div class="hi">كل رقم يُقارن بما قبله</div>
+    <h1>التقدّم</h1>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <label class="f">سجّل وزن اليوم (كجم)</label>
+      <div style="display:flex;gap:9px">
+        <input class="in" id="wt" type="number" inputmode="decimal" placeholder="75.0" style="flex:1">
+        <button class="btn" style="width:auto;margin:0;padding:0 20px" onclick="saveWeight()">حفظ</button>
+      </div>
+      <div class="note">زن نفسك صباحًا، بعد الحمام، قبل الأكل — نفس اليوم كل أسبوع.</div>
+    </div>
+
+    <div class="sec" style="margin-top:16px">
+      <h2>الوزن</h2>
+      <div class="card"><div id="chWeight"></div></div>
+    </div>
+
+    <div class="sec">
+      <h2>نبض التعافي بعد دقيقة</h2>
+      <div class="card">
+        <div id="chRec"></div>
+        <div class="note">كلما زاد الهبوط تحسّنت لياقتك. أقل من 12 يعني تعافيًا ضعيفًا، وأكثر من 20 ممتاز.</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>دقائق التمرين أسبوعيًا</h2>
+      <div class="card"><div id="chMin"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== صحتي ==================== -->
+<section class="screen" id="s-health">
+  <div class="head">
+    <div class="hi">ذكر · 50 سنة · 171 سم</div>
+    <h1>صحتي</h1>
+  </div>
+  <div class="wrap">
+    <div class="seg" style="margin-bottom:14px">
+      <button class="on" onclick="segH(0,this)">التحاليل</button>
+      <button onclick="segH(1,this)">المكمّلات</button>
+      <button onclick="segH(2,this)">المواعيد</button>
+    </div>
+    <div id="h0"></div>
+    <div id="h1" class="hide"></div>
+    <div id="h2" class="hide"></div>
+  </div>
+</section>
+
+</div>
+
+<nav>
+  <button class="on" onclick="go('today',this)">
+    <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/></svg>اليوم</button>
+  <button onclick="go('train',this)">
+    <svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>التمرين</button>
+  <button onclick="go('food',this)">
+    <svg viewBox="0 0 24 24"><path d="M6 3v8a3 3 0 006 0V3M9 11v10M18 3c-1.5 2-2 4-2 6v3h3V3z"/></svg>التغذية</button>
+  <button onclick="go('prog',this)">
+    <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>التقدّم</button>
+  <button onclick="go('health',this)">
+    <svg viewBox="0 0 24 24"><path d="M20.8 6.6a5 5 0 00-8.8-1.6A5 5 0 003.2 6.6c-1 3 1.6 6.2 8.8 12 7.2-5.8 9.8-9 8.8-12z"/></svg>صحتي</button>
+</nav>
+
+<div id="toast"></div>
+<div id="sheet"></div>
+
+<script>
+/* ============================================================
+   البيانات الثابتة
+   ============================================================ */
+const PLAN = {
+  0:{n:"الأحد",t:"أثقال — كامل الجسم + مشي خفيف",d:"45 دقيقة",c:"#B4531F",i:"🏋️",
+     s:["سكوات","ضغط صدر بالدمبل — قبضة محايدة","تجديف بالكيبل","جسر الورك","بلانك 30 ثانية",
+        "3 مجموعات × 12 تكرارًا · راحة دقيقة ونصف","اختم بـ15 دقيقة مشي على نبض 110–120"]},
+  1:{n:"الاثنين",t:"كارديو فترات — يوم قياس التعافي",d:"30 دقيقة",c:"#9E2B36",i:"⚡",
+     s:["إحماء 5 دقائق — 4.5 كم/س","6 دورات: دقيقة سريعة 7–8 كم/س + دقيقتان هادئتان",
+        "تهدئة 5 دقائق — 4.0 كم/س","اشرب 500 مل ماء إضافي","قِس نبض التعافي بعد 60 ثانية"]},
+  2:{n:"الثلاثاء",t:"أثقال — الجزء العلوي الآمن للكتف + بطن",d:"40 دقيقة",c:"#6C4A9C",i:"💪",
+     s:["تجديف بالكيبل","سحب أرضي","ضغط صدر مسطح — قبضة ضيقة","رفرفة جانبية حتى مستوى الكتف فقط",
+        "بايسبس ثم ترايسبس بالحبل","بطن: بلانك · رفع أرجل · دراجة","لا ترفع أي وزن فوق مستوى الكتف"]},
+  3:{n:"الأربعاء",t:"مشي ثابت طويل بميل + سباحة",d:"45 دقيقة",c:"#1C6E8C",i:"🚶",
+     s:["أول 5 دقائق — 4.5 كم/س · ميل صفر","حتى الدقيقة 40 — 5.5–6 كم/س · ميل 2–3٪",
+        "آخر 5 دقائق — 4.0 كم/س · ميل صفر","سباحة الصدر 15 دقيقة — تجنّب الحرة والفراشة",
+        "الجلسة الأهم للكبد الدهني"]},
+  4:{n:"الخميس",t:"أثقال — الجزء السفلي + مشي متدرّج",d:"45 دقيقة",c:"#2F7A3E",i:"🦵",
+     s:["سكوات","ضغط الأرجل","ديدليفت روماني — وزن خفيف","لانجز بالدمبل","رفع السمانة",
+        "3 مجموعات × 12 تكرارًا","اختم بـ12 دقيقة مشي مع رفع الميل 1٪ كل 3 دقائق"]},
+  5:{n:"الجمعة",t:"راحة",d:"—",c:"#5D6F69",i:"🌿",s:["اختياري: مشي خفيف خارجي 20–30 دقيقة بدون قياس"]},
+  6:{n:"السبت",t:"راحة",d:"—",c:"#5D6F69",i:"🌿",s:["اختياري: مشي خفيف خارجي 20–30 دقيقة بدون قياس"]}
+};
+
+const ROUTINE = [
+  {id:"b12",  t:"إبرة B12", s:"حسب جدول الطبيب"},
+  {id:"supp", t:"المكمّلات الصباحية", s:"أوميغا-3 · CoQ10 · بروبيوتيك مع D3 · ليكوبين"},
+  {id:"shl",  t:"تمرين الكتف", s:"تدوير خارجي بحبل مطاطي · 15 تكرارًا × مجموعتين"},
+  {id:"train",t:"جلسة اليوم", s:"حسب الجدول"},
+  {id:"prot", t:"بروتين كافٍ", s:"110–120 غرامًا موزعة على 3–4 وجبات"},
+  {id:"sleep",t:"نوم 7 ساعات", s:"النوم الجيد يخفض الضغط والسكر التراكمي"}
+];
+
+const FOODS = [
+  ["صدر دجاج مشوي (150غ)",248,46],["سمك زبيدي مشوي (150غ)",220,34],["سمك هامور مشوي (150غ)",190,36],
+  ["لحم غنم مشوي (150غ)",380,38],["تونة معلبة بالماء (علبة)",100,22],["بيض مسلوق (حبة)",78,6.3],
+  ["عجة بيضتين",180,12],["بروتين واي (سكوب)",120,24],["زبادي يوناني (170غ)",100,17],
+  ["لبن رايب (كوب)",110,8.5],["حليب قليل الدسم (كوب)",105,8],["جبن قريش (100غ)",98,11],
+  ["جبن شرائح (شريحة)",70,4],["فول مدمس (طبق)",190,12],["حمص (طبق صغير)",210,6],
+  ["شوربة عدس (كوب)",180,12],["خبز عربي (رغيف)",165,5.5],["خبز أسمر (شريحة)",80,4],
+  ["أرز أبيض مطبوخ (كوب)",205,4.3],["أرز بني مطبوخ (كوب)",216,5],["برغل مطبوخ (كوب)",150,5.6],
+  ["شوفان (نصف كوب جاف)",150,5],["بطاطس مسلوقة (وسط)",130,3],["مجبوس دجاج (طبق)",550,30],
+  ["سلطة خضراء",60,2],["تبولة (طبق)",120,3],["خضار سوتيه (كوب)",90,3],["شوربة خضار (كوب)",80,3],
+  ["موز (حبة)",105,1.3],["تفاح (حبة)",95,0.5],["برتقال (حبة)",62,1.2],["تمر (3 حبات)",60,0.5],
+  ["لوز (30غ)",173,6],["زبدة فول سوداني (م.ك)",94,4],["زيت زيتون (م.ك)",119,0],
+  ["قهوة سادة",2,0.3],["شاي بدون سكر",2,0],["كرك (كوب)",120,3],
+  ["شاورما دجاج (سندويتش)",400,25],["برجر لحم (ساندويتش)",540,25],["بيتزا (شريحة)",285,12],
+  ["بطاطس مقلية (وسط)",365,4],["شيبس (كيس صغير)",150,2],["حلويات (قطعة)",350,5],
+  ["مشروب غازي (علبة)",140,0],["عصير برتقال (كوب)",112,1.7]
+];
+
+/* ============================================================
+   الحالة والتخزين
+   ============================================================ */
+let S = {
+  target:1850, protTarget:115, waterTarget:8,
+  workouts:[], weights:[], nutrition:{}, routine:{}, water:{},
+  labs:[], supps:[], appts:[]
+};
+const today = () => new Date().toISOString().slice(0,10);
+const K = {main:"rujaib-main-v1"};
+
+let STORE_OK = null;
+
+function setStatus(state,msg){
+  const el=document.getElementById('saveState');
+  if(!el) return;
+  const map={saving:["#C9922B","يحفظ…"],ok:["#2F8F6E","محفوظ على جهازك"],err:["#9E2B36",msg||"الحفظ معطّل"]};
+  const m=map[state]||map.ok;
+  el.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:4px;background:${m[0]};margin-left:5px"></span>${m[1]}`;
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(K.main);
+    if(raw) S = Object.assign(S, JSON.parse(raw));
+    localStorage.setItem(K.main+"-probe","1");
+    localStorage.removeItem(K.main+"-probe");
+    STORE_OK = true; setStatus('ok');
+  }catch(e){
+    STORE_OK = false; setStatus('err');
+  }
+  render();
+}
+
+function save(){
+  if(STORE_OK===false) return;
+  try{
+    localStorage.setItem(K.main, JSON.stringify(S));
+    setStatus('ok');
+  }catch(e){
+    STORE_OK=false; setStatus('err');
+    toast("تعذّر الحفظ — تأكد أنك لست في تصفّح خاص");
+  }
+}
+
+function backupCopy(){
+  const txt=JSON.stringify(S);
+  const show=()=>{
+    document.getElementById('sheet').innerHTML=
+     `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+        <h3>نسخة احتياطية</h3>
+        <div class="sub">احفظها في الملاحظات. تنفعك عند تغيير الجهاز أو المتصفح.</div>
+        <textarea class="in" rows="6" onclick="this.select()" style="font-size:11px;direction:ltr">${txt.replace(/</g,'&lt;')}</textarea>
+        <button class="btn" onclick="closeSheet()">تم</button>
+      </div></div>`;
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>{toast("نُسخت"); show();}).catch(show);
+  } else show();
+}
+
+function backupPaste(){
+  document.getElementById('sheet').innerHTML=
+   `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+      <h3>استيراد بيانات</h3>
+      <div class="sub">الصق النص هنا. سيحل محل البيانات الحالية.</div>
+      <textarea class="in" id="bkIn" rows="7" style="font-size:11px;direction:ltr"></textarea>
+      <button class="btn" onclick="backupRestore()">استورد</button>
+      <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+    </div></div>`;
+}
+
+function backupRestore(){
+  try{
+    const o=JSON.parse(document.getElementById('bkIn').value.trim());
+    if(typeof o!=='object'||!o) throw 0;
+    S=Object.assign(S,o); save();
+    closeSheet(); render(); toast("تم الاستيراد");
+  }catch(e){ toast("النص غير صالح — انسخه كاملًا"); }
+}
+
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2100);
+}
+
+/* ============================================================
+   التنقّل
+   ============================================================ */
+function go(id,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  window.scrollTo(0,0);
+  if(id==='prog') drawCharts();
+}
+function segTrain(i,el){
+  document.querySelectorAll('#s-train .seg button').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  [0,1,2].forEach(n=>document.getElementById('t'+n).classList.toggle('hide',n!==i));
+  if(i===1) renderPlan(); if(i===2) renderLog();
+}
+function segH(i,el){
+  document.querySelectorAll('#s-health .seg button').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  [0,1,2].forEach(n=>document.getElementById('h'+n).classList.toggle('hide',n!==i));
+}
+
+/* ============================================================
+   اليوم
+   ============================================================ */
+function render(){
+  const d=new Date();
+  const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  const months=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+  document.getElementById('todayDate').textContent =
+    days[d.getDay()]+" · "+d.getDate()+" "+months[d.getMonth()]+" "+d.getFullYear();
+  const h=d.getHours();
+  document.getElementById('greet').textContent =
+    h<12?"صباح الخير":"مساء الخير";
+  document.getElementById('hTarget').textContent = S.target;
+
+  const p = PLAN[d.getDay()];
+  document.getElementById('planCard').innerHTML =
+    `<div class="plan" style="background:linear-gradient(200deg,${p.c},${shade(p.c,-28)})">
+       <div class="pi">${p.i}</div>
+       <div class="pt"><b>${p.n}</b><span>${p.t}</span></div>
+       <div class="pd">${p.d}</div>
+     </div>
+     <div class="card" style="margin-top:10px"><div class="steps">
+       ${p.s.map((x,i)=>`<div class="step"><i>${String(i+1).padStart(2,'0')}</i><span>${x}</span></div>`).join('')}
+     </div></div>`;
+
+  renderRoutine(); renderEnergy(); renderMeals(); renderKpis();
+  renderLabs(); renderSupps(); renderAppts();
+}
+
+function shade(hex,p){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)+p, g=((n>>8)&255)+p, b=(n&255)+p;
+  const c=v=>Math.max(0,Math.min(255,v));
+  return "#"+((1<<24)+(c(r)<<16)+(c(g)<<8)+c(b)).toString(16).slice(1);
+}
+
+function renderRoutine(){
+  const t=today(); const st=S.routine[t]||{};
+  document.getElementById('routine').innerHTML = ROUTINE.map(r=>{
+    const on=!!st[r.id];
+    return `<div class="chk ${on?'done':''}" onclick="tick('${r.id}')">
+      <div class="box ${on?'on':''}">${on?'✓':''}</div>
+      <div class="ct">${r.t}<small>${r.s}</small></div></div>`;
+  }).join('');
+}
+function tick(id){
+  const t=today();
+  S.routine[t]=S.routine[t]||{};
+  S.routine[t][id]=!S.routine[t][id];
+  save(); renderRoutine();
+}
+
+function renderEnergy(){
+  const t=today();
+  const meals=S.nutrition[t]||[];
+  const kcal=meals.reduce((a,m)=>a+m.k,0);
+  const prot=meals.reduce((a,m)=>a+m.p,0);
+  const water=S.water[t]||0;
+  const left=S.target-kcal;
+  document.getElementById('kcalLeft').textContent = left>=0?Math.round(left):("+"+Math.abs(Math.round(left)));
+  document.getElementById('kcalIn').textContent = Math.round(kcal);
+  document.getElementById('protTxt').textContent = Math.round(prot)+" / "+S.protTarget+" غ";
+  document.getElementById('waterTxt').textContent = water+" / "+S.waterTarget+" أكواب";
+  const pk=Math.min(1,kcal/S.target);
+  document.getElementById('fKcal').style.width=(pk*100)+"%";
+  document.getElementById('fKcal').style.background = kcal>S.target?"#9E2B36":"#0C3B32";
+  document.getElementById('fProt').style.width=Math.min(100,prot/S.protTarget*100)+"%";
+  document.getElementById('fWater').style.width=Math.min(100,water/S.waterTarget*100)+"%";
+  const arc=document.getElementById('ringArc');
+  arc.style.strokeDashoffset = 251.2*(1-pk);
+  arc.setAttribute('stroke', kcal>S.target?"#9E2B36":"#0C3B32");
+}
+function addWater(){
+  const t=today(); S.water[t]=(S.water[t]||0)+1; save(); renderEnergy();
+}
+
+function renderKpis(){
+  const w=S.weights.slice(-1)[0];
+  document.getElementById('kWeight').textContent = w?w.kg:"—";
+  const rw=[...S.workouts].reverse().find(x=>x.max&&x.rec);
+  document.getElementById('kRec').textContent = rw?("-"+(rw.max-rw.rec)):"—";
+  const wk=Date.now()-6*864e5;
+  const mins=S.workouts.filter(x=>new Date(x.date).getTime()>=wk).reduce((a,x)=>a+(x.min||0),0);
+  document.getElementById('kWeek').textContent = mins||"—";
+}
+
+/* ============================================================
+   التمرين
+   ============================================================ */
+function autoFillWorkout(val){
+  if(val.includes("مشي")) { document.getElementById('wMin').value = 30; document.getElementById('wKcal').value = 150; }
+  else if(val.includes("أثقال")) { document.getElementById('wMin').value = 40; document.getElementById('wKcal').value = 180; }
+  else if(val.includes("كارديو")) { document.getElementById('wMin').value = 30; document.getElementById('wKcal').value = 200; }
+}
+
+function saveWorkout(){
+  const g=id=>{const v=document.getElementById(id).value; return v===''?null:parseFloat(v);};
+  const min=g('wMin');
+  if(!min){ toast("أدخل مدة الجلسة على الأقل"); return; }
+  const w={
+    date:today(), type:document.getElementById('wType').value,
+    min:min, km:g('wKm'), avg:g('wAvg'), max:g('wMax'), rec:g('wRec'),
+    kcal:g('wKcal'), inc:g('wInc'), note:document.getElementById('wNote').value,
+    ts:Date.now()
+  };
+  const prev=[...S.workouts].reverse().find(x=>x.type===w.type);
+  S.workouts.push(w); save();
+  ['wMin','wKm','wAvg','wMax','wRec','wKcal','wInc','wNote'].forEach(i=>document.getElementById(i).value='');
+  toast("تم حفظ الجلسة");
+  showCompare(w,prev); renderKpis();
+  const t=today(); S.routine[t]=S.routine[t]||{}; S.routine[t].train=true; save(); renderRoutine();
+}
+
+function showCompare(w,prev){
+  const box=document.getElementById('cmp');
+  let h=`<div class="card" style="margin-top:12px"><h3 style="font-size:15px;font-weight:800;margin-bottom:8px">قراءة الجلسة</h3>`;
+  const lines=[];
+  if(w.max&&w.rec){
+    const drop=w.max-w.rec;
+    const q= drop>=20?["ممتاز","#2F8F6E"] : drop>=12?["جيد","#C9922B"] : ["ضعيف","#9E2B36"];
+    lines.push(`هبوط النبض بعد دقيقة <b style="color:${q[1]}">${drop} نبضة — ${q[0]}</b>`);
+  }
+  if(w.avg){
+    const pct=Math.round(w.avg/170*100);
+    const z = w.avg<125?"حرق الدهون" : w.avg<140?"هوائي" : w.avg<155?"عالٍ" : "فوق المستهدف";
+    lines.push(`متوسط النبض ${w.avg} — ${pct}٪ من الأقصى · منطقة ${z}`);
+  }
+  if(prev){
+    const d=[];
+    if(w.min&&prev.min) d.push(cmpTxt("المدة",w.min,prev.min,"دقيقة",1));
+    if(w.km&&prev.km)   d.push(cmpTxt("المسافة",w.km,prev.km,"كم",1));
+    if(w.avg&&prev.avg) d.push(cmpTxt("متوسط النبض",w.avg,prev.avg,"نبضة",-1));
+    if(d.length) lines.push(`<div style="margin-top:8px;font-size:12.5px;color:#7D908A">مقارنة بآخر جلسة مماثلة (${prev.date}):</div>`+d.join(''));
+  }
+  h+=lines.map(l=>`<div style="font-size:13.5px;padding:5px 0;border-bottom:1px dashed #E3EAE7">${l}</div>`).join('')+`</div>`;
+  box.innerHTML=h;
+}
+function cmpTxt(label,now,before,unit,goodUp){
+  const diff=+(now-before).toFixed(1);
+  if(diff===0) return `<div style="font-size:13px;padding:3px 0">${label}: بلا تغيير</div>`;
+  const good = goodUp>0 ? diff>0 : diff<0;
+  const c = good?"#2F8F6E":"#B4531F";
+  const sign = diff>0?"+":"";
+  return `<div style="font-size:13px;padding:3px 0">${label}: <b style="color:${c}">${sign}${diff} ${unit}</b></div>`;
+}
+
+function renderPlan(){
+  document.getElementById('t1').innerHTML = Object.keys(PLAN).map(k=>{
+    const p=PLAN[k];
+    return `<div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid #E3EAE7">
+        <div style="width:34px;height:34px;border-radius:11px;background:${p.c}22;display:flex;align-items:center;justify-content:center">${p.i}</div>
+        <div style="flex:1"><b style="color:${p.c};font-size:16px">${p.n}</b>
+          <div style="font-size:11.5px;color:#7D908A">${p.t}</div></div>
+        <span style="font-size:11.5px;font-weight:700;color:#fff;background:${p.c};padding:5px 11px;border-radius:20px">${p.d}</span>
+      </div>
+      <div style="padding:11px 14px" class="steps">
+        ${p.s.map(x=>`<div class="step"><i>·</i><span>${x}</span></div>`).join('')}
+      </div></div>`;
+  }).join('');
+}
+
+function renderLog(){
+  const el=document.getElementById('t2');
+  if(!S.workouts.length){ el.innerHTML=`<div class="card"><div class="empty">لا توجد جلسات بعد. سجّل أول جلسة من التبويب الأول.</div></div>`; return; }
+  el.innerHTML=`<div class="card">`+[...S.workouts].reverse().map((w,i)=>{
+    const idx=S.workouts.length-1-i;
+    const bits=[w.min+" د"];
+    if(w.km) bits.push(w.km+" كم");
+    if(w.avg) bits.push("نبض "+w.avg);
+    return `<div class="row">
+      <div class="rt"><b>${w.type}</b><span>${w.date} · ${bits.join(" · ")}</span></div>
+      <button class="x" onclick="delW(${idx})">×</button></div>`;
+  }).join('')+`</div>`;
+}
+function delW(i){ S.workouts.splice(i,1); save(); renderLog(); renderKpis(); }
+
+/* ============================================================
+   التغذية (بحث فورى وقائمة منسدلة)
+   ============================================================ */
+function searchFood(){
+  const q=document.getElementById('fq').value.trim();
+  const box=document.getElementById('fres');
+  if(!q){ box.innerHTML=''; box.classList.remove('active'); return; }
+  const r=FOODS.filter(f=>f[0].includes(q)).slice(0,10);
+  if(!r.length){ box.innerHTML=`<div style="padding:12px;font-size:13px;color:#7D908A">لا توجد نتائج — أضفه كصنف مخصص.</div>`; box.classList.add('active'); return; }
+  box.innerHTML=r.map(f=>
+    `<div class="fitem" onclick="selectFood('${f[0].replace(/'/g,"")}',${f[1]},${f[2]})">
+       <div class="fn">${f[0]}</div>
+       <div class="fk">${f[1]} سعرة · ${f[2]}غ بروتين</div>
+     </div>`).join('');
+  box.classList.add('active');
+}
+
+function selectFood(n,k,p){
+  addFood(n,k,p);
+  document.getElementById('fq').value='';
+  document.getElementById('fres').classList.remove('active');
+}
+
+function addFood(n,k,p){
+  const t=today();
+  S.nutrition[t]=S.nutrition[t]||[];
+  S.nutrition[t].push({n:n,k:k,p:p});
+  save(); renderEnergy(); renderMeals();
+  toast("تمت إضافة: "+n);
+}
+
+function renderMeals(){
+  const t=today(); const m=S.nutrition[t]||[];
+  const el=document.getElementById('mealList');
+  if(!m.length){ el.innerHTML=`<div class="empty">لم تسجّل شيئًا اليوم بعد. ابحث بالأعلى واختر وجبتك.</div>`; return; }
+  const k=m.reduce((a,x)=>a+x.k,0), p=m.reduce((a,x)=>a+x.p,0);
+  el.innerHTML=m.map((x,i)=>
+    `<div class="row"><div class="rt"><b>${x.n}</b><span>${x.p} غ بروتين</span></div>
+     <div class="rr">${x.k} سعرة</div><button class="x" onclick="delMeal(${i})">×</button></div>`).join('')
+   +`<div class="row" style="border-top:2px solid #E3EAE7;border-bottom:none">
+      <div class="rt"><b>المجموع الكلي</b><span>${Math.round(p)} غ بروتين</span></div>
+      <div class="rr" style="font-size:17px">${Math.round(k)} سعرة</div></div>`;
+}
+
+function delMeal(i){
+  const t=today(); S.nutrition[t].splice(i,1); save(); renderEnergy(); renderMeals();
+}
+
+function openCustom(){
+  document.getElementById('sheet').innerHTML=
+   `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+      <h3>أضف صنفًا جديدًا</h3>
+      <div class="sub">اكتب الاسم والسعرات كما هي على العبوة أو تقديرك.</div>
+      <label class="f">اسم الوجبة أو الصنف</label><input class="in" id="cN" placeholder="مثال: وجبة من المطعم">
+      <div class="grid2">
+        <div><label class="f">السعرات الحرارية</label><input class="in" id="cK" type="number" inputmode="numeric"></div>
+        <div><label class="f">البروتين (غرام)</label><input class="in" id="cP" type="number" inputmode="decimal"></div>
+      </div>
+      <button class="btn" onclick="saveCustom()">إضافة وحساب فوراً</button>
+      <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+    </div></div>`;
+}
+function saveCustom(){
+  const n=document.getElementById('cN').value.trim();
+  const k=parseFloat(document.getElementById('cK').value);
+  const p=parseFloat(document.getElementById('cP').value)||0;
+  if(!n||isNaN(k)){ toast("أدخل الاسم والسعرات بشكل صحيح"); return; }
+  addFood(n,k,p); closeSheet();
+}
+function closeSheet(){ document.getElementById('sheet').innerHTML=''; }
+
+/* ============================================================
+   التقدّم والرسوم
+   ============================================================ */
+function saveWeight(){
+  const v=parseFloat(document.getElementById('wt').value);
+  if(!v){ toast("أدخل الوزن"); return; }
+  const t=today();
+  const ex=S.weights.findIndex(x=>x.date===t);
+  if(ex>=0) S.weights[ex].kg=v; else S.weights.push({date:t,kg:v});
+  save(); document.getElementById('wt').value='';
+  toast("تم حفظ الوزن"); drawCharts(); renderKpis();
+}
+
+function lineChart(data,color,unit,invertGood){
+  if(data.length<2) return `<div class="empty">تحتاج قياسين على الأقل لعرض الاتجاه.</div>`;
+  const W=320,H=140,P=26;
+  const vs=data.map(d=>d.v);
+  const mn=Math.min(...vs), mx=Math.max(...vs);
+  const range=(mx-mn)||1;
+  const pts=data.map((d,i)=>{
+    const x=P+(i/(data.length-1))*(W-P*2);
+    const y=H-P-((d.v-mn)/range)*(H-P*2);
+    return [x,y];
+  });
+  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=path+` L${pts[pts.length-1][0].toFixed(1)} ${H-P} L${pts[0][0].toFixed(1)} ${H-P} Z`;
+  const first=vs[0], last=vs[vs.length-1];
+  const diff=+(last-first).toFixed(1);
+  const good = invertGood ? diff<0 : diff>0;
+  const dc = diff===0?"#7D908A":(good?"#2F8F6E":"#B4531F");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs><linearGradient id="g${color.slice(1)}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${color}" stop-opacity=".22"/>
+      <stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#g${color.slice(1)})"/>
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#fff" stroke="${color}" stroke-width="2"/>`).join('')}
+  </svg>
+  <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#7D908A;margin-top:2px">
+    <span>${data[0].l}</span><span>${data[data.length-1].l}</span></div>
+  <div style="margin-top:8px;font-size:13.5px">من <b>${first}</b> إلى <b>${last}</b> ${unit}
+    <b style="color:${dc}"> (${diff>0?'+':''}${diff})</b></div>`;
+}
+
+function barChart(data,color){
+  if(!data.length) return `<div class="empty">لا توجد جلسات بعد.</div>`;
+  const W=320,H=140,P=24;
+  const mx=Math.max(...data.map(d=>d.v),1);
+  const bw=(W-P*2)/data.length;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">
+    ${data.map((d,i)=>{
+      const h=(d.v/mx)*(H-P*2);
+      const x=P+i*bw+bw*0.16, y=H-P-h;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw*0.68).toFixed(1)}" height="${Math.max(h,2).toFixed(1)}" rx="3" fill="${color}"/>
+        <text x="${(x+bw*0.34).toFixed(1)}" y="${H-P+13}" font-size="9" fill="#7D908A" text-anchor="middle">${d.l}</text>`;
+    }).join('')}
+  </svg>`;
+}
+
+function drawCharts(){
+  const w=S.weights.slice(-12).map(x=>({v:x.kg,l:x.date.slice(5)}));
+  document.getElementById('chWeight').innerHTML = lineChart(w,"#0C3B32","كجم",true);
+
+  const r=S.workouts.filter(x=>x.max&&x.rec).slice(-12).map(x=>({v:x.max-x.rec,l:x.date.slice(5)}));
+  document.getElementById('chRec').innerHTML = lineChart(r,"#9E2B36","نبضة",false);
+
+  const weeks={};
+  S.workouts.forEach(x=>{
+    const d=new Date(x.date);
+    const wk=new Date(d); wk.setDate(d.getDate()-d.getDay());
+    const key=wk.toISOString().slice(5,10);
+    weeks[key]=(weeks[key]||0)+(x.min||0);
+  });
+  const bars=Object.keys(weeks).slice(-6).map(k=>({v:weeks[k],l:k}));
+  document.getElementById('chMin').innerHTML = barChart(bars,"#175E4E");
+}
+
+/* ============================================================
+   صحتي
+   ============================================================ */
+function renderLabs(){
+  const col={ok:"#2F8F6E",watch:"#C9922B",bad:"#9E2B36"};
+  const lbl={ok:"سليم",watch:"يُتابع",bad:"يحتاج تدخّل"};
+  const list = S.labs.length
+    ? S.labs.map((l,i)=>
+      `<div class="lab">
+         <div class="ln"><b>${esc(l.n)}</b><span>${esc(l.d||"")}${l.note?" · "+esc(l.note):""}</span></div>
+         <div style="text-align:left">
+           <div class="lv" style="color:${col[l.s]}">${esc(l.v)}</div>
+           <span class="tag" style="background:${col[l.s]}18;color:${col[l.s]}">${lbl[l.s]}</span>
+         </div>
+         <button class="x" onclick="delItem('labs',${i})">×</button></div>`).join('')
+    : `<div class="empty">لم تُضف نتائج بعد. أضف أول نتيجة من الزر أدناه.</div>`;
+  document.getElementById('h0').innerHTML=`<div class="card">${list}</div>
+    <button class="btn" onclick="addLab()">أضف نتيجة تحليل</button>
+    <div class="note">هذه نسخة مرجعية تحفظها لنفسك. المصدر الرسمي دائمًا تقرير المختبر والطبيب.</div>`;
+}
+
+function renderSupps(){
+  const list = S.supps.length
+    ? S.supps.map((x,i)=>
+      `<div class="row"><div class="rt">
+         <b style="${x.ok?'':'text-decoration:line-through;color:#9AACA6'}">${esc(x.n)}</b>
+         <span>${esc(x.s||"")}</span></div>
+       <span class="tag" onclick="toggleSupp(${i})" style="background:${x.ok?'#2F8F6E18':'#9E2B3618'};color:${x.ok?'#2F8F6E':'#9E2B36'}">${x.ok?'مستمر':'موقوف'}</span>
+       <button class="x" onclick="delItem('supps',${i})">×</button></div>`).join('')
+    : `<div class="empty">لم تُضف مكمّلات بعد.</div>`;
+  document.getElementById('h1').innerHTML=`<div class="card">${list}</div>
+    <button class="btn" onclick="addSupp()">أضف مكمّلًا</button>
+    <div class="note">اضغط على وسم الحالة لتبديله بين مستمر وموقوف.</div>`;
+}
+
+function renderAppts(){
+  const list = S.appts.length
+    ? S.appts.map((a,i)=>
+      `<div class="row"><div style="width:9px;height:34px;border-radius:5px;background:${a.c||'#175E4E'};flex:none"></div>
+       <div class="rt"><b>${esc(a.t)}</b><span>${esc(a.d||"")}</span></div>
+       <button class="x" onclick="delItem('appts',${i})">×</button></div>`).join('')
+    : `<div class="empty">لا مواعيد مسجّلة.</div>`;
+  document.getElementById('h2').innerHTML=`<div class="card">${list}</div>
+    <button class="btn" onclick="addAppt()">أضف موعدًا</button>
+    <div class="card" style="margin-top:16px">
+      <b style="font-size:14px">نسخة احتياطية</b>
+      <div class="note" style="margin-top:4px">بياناتك محفوظة على هذا الجهاز فقط. انسخها قبل تغيير الجوال أو المتصفح.</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" style="margin:0;padding:11px;font-size:13.5px" onclick="backupCopy()">انسخ بياناتي</button>
+        <button class="btn ghost" style="margin:0;padding:11px;font-size:13.5px" onclick="backupPaste()">استورد</button>
+      </div>
+    </div>`;
+}
+
+function esc(t){ return String(t==null?"":t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function val(id){ const e=document.getElementById(id); return e?e.value.trim():""; }
+
+function delItem(key,i){
+  S[key].splice(i,1); save();
+  ({labs:renderLabs,supps:renderSupps,appts:renderAppts})[key]();
+}
+function toggleSupp(i){ S.supps[i].ok = S.supps[i].ok?0:1; save(); renderSupps(); }
+
+function addLab(){
+  document.getElementById('sheet').innerHTML=
+   `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+      <h3>نتيجة تحليل</h3>
+      <label class="f">اسم الفحص</label><input class="in" id="lN" placeholder="مثال: سكر تراكمي">
+      <div class="grid2">
+        <div><label class="f">النتيجة</label><input class="in" id="lV" placeholder="5.7٪"></div>
+        <div><label class="f">التاريخ</label><input class="in" id="lD" placeholder="23 يوليو 2026"></div>
+      </div>
+      <label class="f">التقييم</label>
+      <select class="in" id="lS">
+        <option value="ok">سليم</option><option value="watch">يُتابع</option><option value="bad">يحتاج تدخّل</option>
+      </select>
+      <label class="f">ملاحظة</label><input class="in" id="lNo" placeholder="اختياري">
+      <button class="btn" onclick="saveLab()">أضف</button>
+      <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+    </div></div>`;
+}
+function saveLab(){
+  const n=val('lN'), v=val('lV');
+  if(!n||!v){ toast("أدخل اسم الفحص والنتيجة"); return; }
+  S.labs.unshift({n:n,v:v,d:val('lD'),s:val('lS')||'ok',note:val('lNo')});
+  save(); closeSheet(); renderLabs(); toast("أُضيفت النتيجة");
+}
+
+function addSupp(){
+  document.getElementById('sheet').innerHTML=
+   `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+      <h3>مكمّل</h3>
+      <label class="f">الاسم والجرعة</label><input class="in" id="sN" placeholder="مثال: أوميغا-3">
+      <label class="f">ملاحظة</label><input class="in" id="sS" placeholder="اختياري">
+      <button class="btn" onclick="saveSupp()">أضف</button>
+      <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+    </div></div>`;
+}
+function saveSupp(){
+  const n=val('sN');
+  if(!n){ toast("أدخل الاسم"); return; }
+  S.supps.push({n:n,s:val('sS'),ok:1});
+  save(); closeSheet(); renderSupps(); toast("أُضيف المكمّل");
+}
+
+function addAppt(){
+  document.getElementById('sheet').innerHTML=
+   `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+      <h3>موعد</h3>
+      <label class="f">الموعد</label><input class="in" id="aT" placeholder="مثال: إعادة سونار البطن">
+      <label class="f">التوقيت</label><input class="in" id="aD" placeholder="يناير 2027">
+      <button class="btn" onclick="saveAppt()">أضف</button>
+      <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+    </div></div>`;
+}
+function saveAppt(){
+  const t=val('aT');
+  if(!t){ toast("أدخل الموعد"); return; }
+  const cols=["#B4531F","#9E2B36","#1C6E8C","#6C4A9C","#2F7A3E","#C9922B"];
+  S.appts.push({t:t,d:val('aD'),c:cols[S.appts.length%cols.length]});
+  save(); closeSheet(); renderAppts(); toast("أُضيف الموعد");
+}
+
+/* بدء التشغيل */
+load();
+</script>
 </body>
 </html>
