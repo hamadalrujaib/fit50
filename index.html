@@ -667,9 +667,13 @@ let S = {
   workouts:[], weights:[], nutrition:{}, routine:{}, water:{},
   labs:[], supps:[], appts:[], badges:[], move:{}, suppLog:{}, body:[]
 };
-const today = () => new Date().toISOString().slice(0,10);
+function ymd(d){
+  const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+const today = () => ymd(new Date());
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 11;
+const APP_VER = 13;
 
 let STORE_OK = null;
 
@@ -1463,7 +1467,7 @@ function streak(){
   const days=new Set(S.workouts.map(w=>w.date));
   let n=0; const d=new Date();
   for(let i=0;i<400;i++){
-    const k=d.toISOString().slice(0,10);
+    const k=ymd(d);
     const dow=d.getDay();
     if(days.has(k)) n++;
     else if(dow===5||dow===6){ /* الجمعة والسبت راحة لا تكسر التتابع */ }
@@ -1545,7 +1549,7 @@ function renderHeat(){
   let cells='', mset=new Set();
   const d=new Date(start);
   while(d<=end){
-    const k=d.toISOString().slice(0,10);
+    const k=ymd(d);
     const m=map[k]||0;
     const lvl = m===0?0 : m<20?1 : m<35?2 : m<50?3 : 4;
     const isToday = k===today();
@@ -2050,7 +2054,7 @@ function commitPct(){
   const done=new Set(S.workouts.map(w=>w.date));
   let planned=0, hit=0; const d=new Date();
   for(let i=0;i<28;i++){
-    const k=d.toISOString().slice(0,10), dow=d.getDay();
+    const k=ymd(d), dow=d.getDay();
     if(dow!==5 && dow!==6){ planned++; if(done.has(k)) hit++; }
     d.setDate(d.getDate()-1);
   }
@@ -2061,7 +2065,7 @@ function activeWeeks(){
   const wk={};
   S.workouts.forEach(x=>{
     const d=new Date(x.date), s=new Date(d); s.setDate(d.getDate()-d.getDay());
-    const k=s.toISOString().slice(0,10);
+    const k=ymd(s);
     wk[k]=(wk[k]||0)+1;
   });
   return Object.values(wk).filter(n=>n>=3).length;
@@ -2244,7 +2248,7 @@ function doMove(i,k){
 /* ============================================================
    التحليل الأسبوعي
    ============================================================ */
-function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return ymd(d); }
 function inWindow(dateStr, from, to){ return dateStr>=daysAgo(from) && dateStr<=daysAgo(to); }
 
 function nutriAvg(from,to){
@@ -2405,6 +2409,30 @@ function renderAnalysis(){
   el.innerHTML = head + out.join('') +
     `<div class="note">القراءة تقارن آخر سبعة أيام بالسبعة التي قبلها. كلما سجّلت أكثر، صارت أدق.</div>`;
 }
+
+
+/* ============================================================
+   تجديد اليوم — يعيد الرسم عند العودة للتطبيق أو تغيّر التاريخ
+   ============================================================ */
+let LAST_DAY = today();
+
+function refreshIfNewDay(force){
+  const now=today();
+  if(force || now!==LAST_DAY){
+    const changed = now!==LAST_DAY;
+    LAST_DAY = now;
+    pickMeal = mealByHour();
+    render();
+    const sc=document.querySelector('.screen.on');
+    if(sc && sc.id==='s-prog'){ drawCharts(); renderDonut(); renderAnalysis(); }
+    if(changed) toast("يوم جديد — حُدّثت الشاشة");
+  }
+}
+
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshIfNewDay(); });
+window.addEventListener('pageshow', ()=>refreshIfNewDay());
+window.addEventListener('focus', ()=>refreshIfNewDay());
+setInterval(()=>refreshIfNewDay(), 60000);
 
 /* بدء التشغيل */
 document.getElementById('app').insertAdjacentHTML('afterbegin','');
