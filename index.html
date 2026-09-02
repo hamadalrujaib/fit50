@@ -635,12 +635,37 @@ function backupCopy(){
 function backupPaste(){
   document.getElementById('sheet').innerHTML=
    `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
-      <h3>استيراد بيانات</h3>
-      <div class="sub">الصق النص هنا. سيحل محل البيانات الحالية.</div>
-      <textarea class="in" id="bkIn" rows="7" style="font-size:11px;direction:ltr"></textarea>
+      <h3>استيراد بياناتي</h3>
+      <div class="sub">انسخ النص من الملاحظات، ثم اضغط الزر الذهبي — أو الصقه يدويًا في المربع.</div>
+      <button class="btn g" style="margin:0 0 12px" onclick="pasteClip()">📋 الصق من الحافظة</button>
+      <textarea class="in" id="bkIn" rows="7" style="font-size:11px;direction:ltr"
+        placeholder='اضغط هنا مطوّلًا ثم اختر لصق'></textarea>
+      <div id="bkInfo" class="note"></div>
       <button class="btn" onclick="backupRestore()">استورد</button>
       <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+      <div class="note">إن لم يعمل زر اللصق، اضغط داخل المربع مطوّلًا حتى تظهر كلمة "لصق".</div>
     </div></div>`;
+}
+
+async function pasteClip(){
+  try{
+    if(!navigator.clipboard || !navigator.clipboard.readText) throw 0;
+    const t=await navigator.clipboard.readText();
+    if(!t){ toast("الحافظة فارغة"); return; }
+    document.getElementById('bkIn').value=t;
+    peekBackup(t);
+    toast("لُصق — راجع ثم اضغط استورد");
+  }catch(e){
+    toast("اضغط داخل المربع مطوّلًا واختر لصق");
+  }
+}
+
+function peekBackup(t){
+  const el=document.getElementById('bkInfo'); if(!el) return;
+  try{
+    const o=JSON.parse(t);
+    el.innerHTML=`<b style="color:#2F8F6E">النص سليم:</b> ${(o.labs||[]).length} تحليلًا · ${(o.supps||[]).length} مكمّلًا · ${(o.appts||[]).length} موعدًا`;
+  }catch(e){ el.innerHTML=`<b style="color:#9E2B36">النص غير مكتمل</b> — تأكد من نسخه من أوله لآخره.`; }
 }
 
 function backupRestore(){
@@ -649,7 +674,7 @@ function backupRestore(){
     if(typeof o!=='object'||!o) throw 0;
     S=Object.assign(S,o); save();
     closeSheet(); render(); toast("تم الاستيراد");
-  }catch(e){ toast("النص غير صالح — انسخه كاملًا"); }
+  }catch(e){ toast("النص ناقص — انسخه من { حتى } كاملًا"); }
 }
 
 function toast(m){
@@ -787,12 +812,18 @@ function saveWorkout(){
     const a=ACTS[i]; const o={name:a.k, icon:a.i};
     a.f.forEach(f=>{ const v=g('a'+i+'_'+f); if(v!=null) o[f]=v; });
     if(!o.min){ toast("أدخل دقائق نشاط: "+a.k); return; }
+    if(o.spd==null && o.km && o.min) o.spd = Math.round(o.km/(o.min/60)*10)/10;
     totMin+=o.min; totKm+=(o.km||0); totKcal+=(o.kcal||0);
     parts.push(o);
   }
   const type = parts.length===1 ? parts[0].name : parts.map(p=>p.name.split(" — ")[0]).join(" + ");
+  const spds=parts.filter(p=>p.spd).map(p=>p.spd);
+  const jogMin=parts.reduce((a,p)=>a+(p.jog||0),0);
   const w={ date:today(), type:type, parts:parts, min:totMin,
             km:totKm||null, kcal:totKcal||null,
+            spd: totKm&&totMin ? Math.round(totKm/(totMin/60)*10)/10 : null,
+            spdmax: Math.max(0,...parts.map(p=>p.spdmax||0))||null,
+            jog: jogMin||null,
             avg:g('wAvg'), max:g('wMax'), rec:g('wRec'),
             note:document.getElementById('wNote').value, ts:Date.now() };
   const prev=[...S.workouts].reverse().find(x=>x.type===w.type);
@@ -813,6 +844,15 @@ function showCompare(w,prev){
     const q= drop>=20?["ممتاز","#2F8F6E"] : drop>=12?["جيد","#C9922B"] : ["ضعيف","#9E2B36"];
     lines.push(`هبوط النبض بعد دقيقة <b style="color:${q[1]}">${drop} نبضة — ${q[0]}</b>`);
   }
+  if(w.spd){
+    let t="";
+    if(w.spd<5) t="مشي هادئ";
+    else if(w.spd<6.5) t="مشي سريع";
+    else if(w.spd<8) t="مشي سريع جدًا أو هرولة خفيفة";
+    else t="هرولة";
+    lines.push(`السرعة المتوسطة <b>${w.spd} كم/س</b> — ${t}${w.spdmax?` · الذروة ${w.spdmax} كم/س`:""}`);
+  }
+  if(w.jog) lines.push(`دقائق الهرولة <b>${w.jog}</b> من أصل ${w.min} دقيقة`);
   if(w.avg){
     const pct=Math.round(w.avg/170*100);
     const z = w.avg<125?"حرق الدهون" : w.avg<140?"هوائي" : w.avg<155?"عالٍ" : "فوق المستهدف";
@@ -823,6 +863,8 @@ function showCompare(w,prev){
     const d=[];
     if(w.min&&prev.min) d.push(cmpTxt("المدة",w.min,prev.min,"دقيقة",1));
     if(w.km&&prev.km)   d.push(cmpTxt("المسافة",w.km,prev.km,"كم",1));
+    if(w.spd&&prev.spd) d.push(cmpTxt("السرعة المتوسطة",w.spd,prev.spd,"كم/س",1));
+    if(w.jog&&prev.jog) d.push(cmpTxt("دقائق الهرولة",w.jog,prev.jog,"دقيقة",1));
     if(w.avg&&prev.avg) d.push(cmpTxt("متوسط النبض",w.avg,prev.avg,"نبضة",-1));
     if(d.length) lines.push(`<div style="margin-top:8px;font-size:12.5px;color:#7D908A">مقارنة بآخر جلسة مماثلة (${prev.date}):</div>`+d.join(''));
   }else{
@@ -863,6 +905,8 @@ function renderLog(){
     const idx=S.workouts.length-1-i;
     const bits=[w.min+" د"];
     if(w.km) bits.push(w.km+" كم");
+    if(w.spd) bits.push(w.spd+" كم/س");
+    if(w.jog) bits.push("هرولة "+w.jog+" د");
     if(w.avg) bits.push("نبض "+w.avg);
     if(w.max&&w.rec) bits.push("تعافي -"+(w.max-w.rec));
     const ic = w.parts ? w.parts.map(p=>p.icon).join(" ") : "🏃";
@@ -1025,7 +1069,10 @@ function renderLabs(){
          <button class="x" onclick="delItem('labs',${i})">×</button></div>`).join('')
     : `<div class="empty">لم تُضف نتائج بعد. أضف أول نتيجة من الزر أدناه.</div>`;
   document.getElementById('h0').innerHTML=
-    `<button class="btn g" style="margin:0 0 12px" onclick="addLab()">＋ أضف نتيجة تحليل جديدة</button>
+    `<div style="display:flex;gap:8px;margin-bottom:12px">
+       <button class="btn g" style="margin:0;padding:12px;font-size:14px;flex:1" onclick="addLab()">＋ نتيجة تحليل</button>
+       <button class="btn ghost" style="margin:0;padding:12px;font-size:14px;flex:none;width:118px" onclick="backupPaste()">استيراد ملف</button>
+     </div>
     <div class="card">${list}</div>
     <div class="note">هذه نسخة مرجعية تحفظها لنفسك. المصدر الرسمي دائمًا تقرير المختبر والطبيب.</div>`;
 }
@@ -1053,7 +1100,10 @@ function renderSupps(){
       <div class="track"><div class="fill" style="width:${activeCount?takenCount/activeCount*100:0}%;background:#2F8F6E"></div></div>
     </div>`:''}
     <div class="card">${list}</div>
-    <button class="btn" onclick="addSupp()">أضف مكمّلًا</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn" style="flex:1" onclick="addSupp()">أضف مكمّلًا</button>
+      <button class="btn ghost" style="flex:none;width:118px" onclick="backupPaste()">استيراد ملف</button>
+    </div>
     <div class="note">اضغط المربع لتعليم ما تناولته اليوم — يُصفَّر تلقائيًا كل صباح. واضغط وسم الحالة لتبديل مستمر/موقوف.</div>`;
 }
 function takeSupp(i){
@@ -1213,7 +1263,9 @@ const BADGES = [
  {id:"labs",  i:"🧪", n:"ملف مكتمل",   f:()=>S.labs.length>=5},
  {id:"routine",i:"✅", n:"روتين كامل", f:()=>{const r=S.routine[today()]||{};return ROUTINE.every(x=>r[x.id])}},
  {id:"steps8", i:"👣", n:"8000 خطوة", f:()=>((S.move&&S.move[today()]||{}).steps||0)>=8000},
- {id:"multi",  i:"🎽", n:"نشاطان بجلسة", f:()=>S.workouts.some(w=>w.parts&&w.parts.length>=2)}
+ {id:"multi",  i:"🎽", n:"نشاطان بجلسة", f:()=>S.workouts.some(w=>w.parts&&w.parts.length>=2)},
+ {id:"jog",    i:"🏃", n:"أول هرولة", f:()=>S.workouts.some(w=>w.jog||(w.type&&w.type.indexOf("هرولة")>=0))},
+ {id:"spd7",   i:"💨", n:"سرعة 7 كم/س", f:()=>S.workouts.some(w=>(w.spdmax||0)>=7)}
 ];
 
 function dayProt(){ return (S.nutrition[today()]||[]).reduce((a,m)=>a+m.p,0); }
@@ -1446,8 +1498,10 @@ function saveShot(){
    أنشطة الجلسة — متعددة
    ============================================================ */
 const ACTS = [
- {k:"مشي على التردميل", i:"🚶", f:["min","km","inc","kcal"]},
- {k:"كارديو فترات",     i:"⚡", f:["min","km","kcal"]},
+ {k:"مشي على التردميل", i:"🚶", f:["min","km","spd","spdmax","inc","kcal"]},
+ {k:"هرولة",            i:"🏃", f:["min","km","spd","spdmax","inc","kcal"]},
+ {k:"مشي + هرولة متقطعة",i:"🏃‍♂️", f:["min","km","spd","spdmax","jog","inc","kcal"]},
+ {k:"كارديو فترات",     i:"⚡", f:["min","km","spd","spdmax","kcal"]},
  {k:"سباحة",            i:"🏊", f:["min","laps","kcal"]},
  {k:"أثقال — كامل الجسم",i:"🏋️", f:["min","sets"]},
  {k:"أثقال — علوي",     i:"💪", f:["min","sets"]},
@@ -1459,7 +1513,7 @@ const ACTS = [
  {k:"ساونا",            i:"♨️", f:["min"]},
  {k:"نشاط آخر",         i:"➕", f:["min","kcal"]}
 ];
-const FLAB={min:"دقائق",km:"كم",inc:"ميل ٪",kcal:"سعرات",laps:"أطوال المسبح",sets:"مجموعات"};
+const FLAB={min:"دقائق",km:"كم",spd:"سرعة متوسطة كم/س",spdmax:"أقصى سرعة كم/س",jog:"دقائق الهرولة",inc:"ميل ٪",kcal:"سعرات",laps:"أطوال المسبح",sets:"مجموعات"};
 let chosen=[];
 
 function renderActSel(){
@@ -1488,7 +1542,7 @@ function renderActRows(){
 }
 function prefillToday(){
   const d=new Date().getDay();
-  const map={0:[3],1:[1],2:[4,6],3:[0,2],4:[5]};
+  const map={0:[5,0],1:[3],2:[6,8],3:[0,4],4:[7,0]};
   chosen=(map[d]||[]).slice();
   renderActSel();
 }
