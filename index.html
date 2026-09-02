@@ -53,6 +53,13 @@ button{background:none;border:none;cursor:pointer}
 .head .tl{font-size:11.5px;color:#7FBFA9;margin-top:1px;letter-spacing:.3px}
 .head h1{font-size:23px;font-weight:800;letter-spacing:-.3px;margin-top:2px}
 .head .dt{font-size:12px;color:#A9CFC1;margin-top:4px}
+.hstats{display:flex;gap:8px;margin-top:15px}
+.hs{flex:1;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
+    border-radius:12px;padding:10px 4px;text-align:center}
+.hs b{display:block;font-family:'Cairo',sans-serif;font-weight:900;font-size:19px;
+      letter-spacing:-.5px;line-height:1.15;color:#fff}
+.hs span{font-size:9px;color:#9FC9BA;display:block;margin-top:3px;line-height:1.3}
+.hs.gold b{color:#F0D89A}
 
 .wrap{padding:14px 14px 0}
 .sec{margin-bottom:16px}
@@ -157,8 +164,18 @@ nav{
   border-top:1px solid var(--line);display:flex;
   padding-bottom:var(--safe-b);z-index:50
 }
-nav button{flex:1;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#9AACA6;font-size:10px}
-nav button.on{color:var(--green)}
+nav button{flex:1;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:#9AACA6;font-size:10px;position:relative;transition:color .2s}
+nav button .ib{width:38px;height:27px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;transition:background .22s}
+nav button.on .ib{background:currentColor}
+nav button.on .ib svg{stroke:#fff}
+nav button.on{font-weight:700}
+nav button:nth-child(1).on{color:#0C3B32}
+nav button:nth-child(2).on{color:#B4531F}
+nav button:nth-child(3).on{color:#C9922B}
+nav button:nth-child(4).on{color:#1C6E8C}
+nav button:nth-child(5).on{color:#9E2B36}
 nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- toast / modal ---------- */
@@ -263,7 +280,8 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
     <div class="tl">اللياقة والصحة بعد الخمسين</div>
     <div class="dt" id="todayDate"></div>
     <div class="dt" id="saveState" style="margin-top:6px;display:flex;align-items:center">
-      <span style="margin-right:auto;opacity:.65">إصدار 5</span></div>
+      <span style="margin-right:auto;opacity:.65">إصدار 6</span></div>
+    <div id="headStats"></div>
   </div>
   <div class="wrap">
 
@@ -485,15 +503,15 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
 
 <nav>
   <button class="on" onclick="go('today',this)">
-    <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/></svg>اليوم</button>
+    <div class="ib"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/></svg></div>اليوم</button>
   <button onclick="go('train',this)">
-    <svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>التمرين</button>
+    <div class="ib"><svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg></div>التمرين</button>
   <button onclick="go('food',this)">
-    <svg viewBox="0 0 24 24"><path d="M6 3v8a3 3 0 006 0V3M9 11v10M18 3c-1.5 2-2 4-2 6v3h3V3z"/></svg>التغذية</button>
+    <div class="ib"><svg viewBox="0 0 24 24"><path d="M6 3v8a3 3 0 006 0V3M9 11v10M18 3c-1.5 2-2 4-2 6v3h3V3z"/></svg></div>التغذية</button>
   <button onclick="go('prog',this)">
-    <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>التقدّم</button>
+    <div class="ib"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg></div>التقدّم</button>
   <button onclick="go('health',this)">
-    <svg viewBox="0 0 24 24"><path d="M20.8 6.6a5 5 0 00-8.8-1.6A5 5 0 003.2 6.6c-1 3 1.6 6.2 8.8 12 7.2-5.8 9.8-9 8.8-12z"/></svg>صحتي</button>
+    <div class="ib"><svg viewBox="0 0 24 24"><path d="M20.8 6.6a5 5 0 00-8.8-1.6A5 5 0 003.2 6.6c-1 3 1.6 6.2 8.8 12 7.2-5.8 9.8-9 8.8-12z"/></svg></div>صحتي</button>
 </nav>
 
 <div id="toast"></div>
@@ -806,6 +824,7 @@ function render(){
        ${st>1?`<div class="streak">🔥 ${st} أيام متتالية</div>`:''}
      </div></div>`;
 
+  renderHeadStats();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros(); renderMacroMini(); renderKpis();
   renderInfo(); renderBadges(); renderHeat(); renderMove(); renderActSel();
   renderLabs(); renderSupps(); renderAppts();
@@ -898,7 +917,7 @@ function saveWorkout(){
   chosen=[]; renderActSel();
   ['wAvg','wMax','wRec','wNote'].forEach(i=>{const e=document.getElementById(i); if(e)e.value='';});
   toast("تم حفظ الجلسة");
-  showCompare(w,prev); renderKpis(); renderInfo(); renderBadges(); renderHeat();
+  showCompare(w,prev); renderKpis(); renderInfo(); renderBadges(); renderHeat(); renderHeadStats();
   const t=today(); S.routine[t]=S.routine[t]||{}; S.routine[t].train=true; save(); renderRoutine();
 }
 
@@ -1063,7 +1082,7 @@ function saveWeight(){
   const ex=S.weights.findIndex(x=>x.date===t);
   if(ex>=0) S.weights[ex].kg=v; else S.weights.push({date:t,kg:v});
   save(); document.getElementById('wt').value='';
-  toast("تم حفظ الوزن"); drawCharts(); renderKpis(); renderBadges();
+  toast("تم حفظ الوزن"); drawCharts(); renderKpis(); renderBadges(); renderHeadStats();
 }
 
 function lineChart(data,color,unit,invertGood){
@@ -1914,6 +1933,27 @@ function sceneSVG(){
       <stop offset="0" stop-color="#04140F" stop-opacity=".28"/>
       <stop offset="100%" stop-color="#04140F" stop-opacity=".72"/></linearGradient></defs>
   </svg>`;
+}
+
+
+/* ============================================================
+   شريط الترويسة
+   ============================================================ */
+const QUIT_DATE = "2026-07-28";
+
+function renderHeadStats(){
+  const el=document.getElementById('headStats'); if(!el) return;
+  const days = Math.max(0, Math.floor((Date.now()-new Date(QUIT_DATE).getTime())/864e5));
+  const w = S.weights.slice(-1)[0];
+  const st = streak();
+  const mins = S.workouts.filter(x=>Date.now()-new Date(x.date).getTime() < 7*864e5)
+                         .reduce((a,x)=>a+(x.min||0),0);
+  el.innerHTML=`<div class="hstats">
+    <div class="hs gold"><b>${days}</b><span>يومًا بلا نيكوتين</span></div>
+    <div class="hs"><b>${st||0}</b><span>أيام متتالية</span></div>
+    <div class="hs"><b>${w?w.kg:"—"}</b><span>الوزن كجم</span></div>
+    <div class="hs"><b>${mins||0}</b><span>دقائق الأسبوع</span></div>
+  </div>`;
 }
 
 /* بدء التشغيل */
