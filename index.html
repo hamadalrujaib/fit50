@@ -280,7 +280,7 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
     <div class="tl">اللياقة والصحة بعد الخمسين</div>
     <div class="dt" id="todayDate"></div>
     <div class="dt" id="saveState" style="margin-top:6px;display:flex;align-items:center">
-      <span style="margin-right:auto;opacity:.65">إصدار 6</span></div>
+      <span style="margin-right:auto;opacity:.65">…</span></div>
     <div id="headStats"></div>
   </div>
   <div class="wrap">
@@ -651,6 +651,7 @@ let S = {
 };
 const today = () => new Date().toISOString().slice(0,10);
 const K = {main:"rujaib-main-v1"};
+const APP_VER = 7;
 
 let STORE_OK = null;
 
@@ -660,7 +661,7 @@ function setStatus(state,msg){
   const map={saving:["#C9922B","يحفظ…"],ok:["#2F8F6E","محفوظ على جهازك"],err:["#9E2B36",msg||"الحفظ معطّل"]};
   const m=map[state]||map.ok;
   el.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:4px;background:${m[0]};margin-left:5px"></span>${m[1]}`
-    +`<span style="margin-right:auto;opacity:.6">إصدار 5</span>`;
+    +`<span style="margin-right:auto;opacity:.6">إصدار ${APP_VER}</span>`;
 }
 
 function load(){
