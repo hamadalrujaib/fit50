@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0C3B32">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -260,7 +262,8 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
     <h1 style="font-size:27px;letter-spacing:-.8px">Fit50</h1>
     <div class="tl">اللياقة والصحة بعد الخمسين</div>
     <div class="dt" id="todayDate"></div>
-    <div class="dt" id="saveState" style="margin-top:6px;display:flex;align-items:center"></div>
+    <div class="dt" id="saveState" style="margin-top:6px;display:flex;align-items:center">
+      <span style="margin-right:auto;opacity:.65">إصدار 3</span></div>
   </div>
   <div class="wrap">
 
@@ -637,7 +640,8 @@ function setStatus(state,msg){
   if(!el) return;
   const map={saving:["#C9922B","يحفظ…"],ok:["#2F8F6E","محفوظ على جهازك"],err:["#9E2B36",msg||"الحفظ معطّل"]};
   const m=map[state]||map.ok;
-  el.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:4px;background:${m[0]};margin-left:5px"></span>${m[1]}`;
+  el.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:4px;background:${m[0]};margin-left:5px"></span>${m[1]}`
+    +`<span style="margin-right:auto;opacity:.6">إصدار 3</span>`;
 }
 
 function load(){
@@ -1005,7 +1009,9 @@ function renderMeals(){
   const k=m.reduce((a,x)=>a+x.k,0), p=m.reduce((a,x)=>a+x.p,0), d=dayMacros();
   el.innerHTML=m.map((x,i)=>
     `<div class="row"><div class="rt"><b>${x.n}</b>
-       <span>بروتين ${x.p} · نشويات ${x.c||0} · سكر ${x.su||0} · دهون ${x.f||0}</span></div>
+       <span>${x.c===undefined&&x.su===undefined&&x.f===undefined
+         ? 'بروتين '+x.p+' · سُجّل قبل التفصيل'
+         : 'بروتين '+x.p+' · نشويات '+(x.c||0)+' · سكر '+(x.su||0)+' · دهون '+(x.f||0)}</span></div>
      <div class="rr">${x.k}</div><button class="x" onclick="delMeal(${i})">×</button></div>`).join('')
    +`<div class="row" style="border-top:2px solid #E3EAE7;border-bottom:none">
       <div class="rt"><b>المجموع</b><span>بروتين ${Math.round(d.p)} · نشويات ${Math.round(d.c)} · سكر ${Math.round(d.su)} · دهون ${Math.round(d.f)}</span></div>
