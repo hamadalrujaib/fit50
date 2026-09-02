@@ -562,7 +562,7 @@ const PLAN = {
 
 const ROUTINE = [
   {id:"b12",  t:"إبرة B12", s:"حسب جدول الطبيب"},
-  {id:"supp", t:"المكمّلات الصباحية", s:"أوميغا-3 · CoQ10 · بروبيوتيك مع D3 · ليكوبين"},
+  {id:"supp", t:"المكمّلات", s:"", link:true},
   {id:"shl",  t:"تمرين الكتف", s:"تدوير خارجي بحبل مطاطي · 15 تكرارًا × مجموعتين"},
   {id:"train",t:"جلسة اليوم", s:"حسب الجدول"},
   {id:"prot", t:"بروتين كافٍ", s:"110–120 غرامًا موزعة على 3–4 وجبات"},
@@ -669,7 +669,7 @@ let S = {
 };
 const today = () => new Date().toISOString().slice(0,10);
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 10;
+const APP_VER = 11;
 
 let STORE_OK = null;
 
@@ -858,12 +858,42 @@ function shade(hex,p){
 
 function renderRoutine(){
   const t=today(); const st=S.routine[t]||{};
+  const log=(S.suppLog&&S.suppLog[t])||{};
+  const taken=S.supps.filter((x,i)=>x.ok&&log[i]).length;
+  const active=S.supps.filter(x=>x.ok).length;
+
   document.getElementById('routine').innerHTML = ROUTINE.map(r=>{
+    if(r.link){
+      const done = active>0 && taken===active;
+      const pct = active?taken/active*100:0;
+      return `<div class="chk" onclick="goSupps()">
+        <div class="box ${done?'on':''}" style="${done?'':'border-style:dashed'}">${done?'✓':''}</div>
+        <div class="ct"><b style="font-weight:700">${r.t}</b>
+          <small>${active? `تناولت ${taken} من ${active} — اضغط للتفصيل` : 'لم تُضف مكمّلات بعد'}</small>
+          ${active?`<div class="track" style="margin-top:6px;height:5px">
+            <div class="fill" style="width:${pct}%;background:${done?'#2F8F6E':'#C9922B'}"></div></div>`:''}
+        </div>
+        <span style="color:#C3CFCA;font-size:17px;flex:none">‹</span></div>`;
+    }
     const on=!!st[r.id];
     return `<div class="chk ${on?'done':''}" onclick="tick('${r.id}')">
       <div class="box ${on?'on':''}">${on?'✓':''}</div>
       <div class="ct">${r.t}<small>${r.s}</small></div></div>`;
   }).join('');
+}
+
+function goSupps(){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));
+  document.getElementById('s-health').classList.add('on');
+  const nb=document.querySelectorAll('nav button');
+  nb.forEach(b=>b.classList.remove('on'));
+  if(nb[4]) nb[4].classList.add('on');
+  const sg=document.querySelectorAll('#s-health .seg button');
+  sg.forEach(b=>b.classList.remove('on'));
+  if(sg[1]) sg[1].classList.add('on');
+  [0,1,2].forEach(n=>document.getElementById('h'+n).classList.toggle('hide',n!==1));
+  renderSupps();
+  window.scrollTo(0,0);
 }
 function tick(id){
   const t=today();
@@ -1268,11 +1298,7 @@ function renderSupps(){
 function takeSupp(i){
   const t=today(); S.suppLog=S.suppLog||{}; S.suppLog[t]=S.suppLog[t]||{};
   S.suppLog[t][i]=!S.suppLog[t][i];
-  save(); renderSupps();
-  const log=S.suppLog[t];
-  if(S.supps.filter((x,j)=>x.ok&&log[j]).length===S.supps.filter(x=>x.ok).length){
-    const r=S.routine[t]=S.routine[t]||{}; r.supp=true; save(); renderRoutine();
-  }
+  save(); renderSupps(); renderRoutine(); renderBadges();
 }
 
 function renderAppts(){
@@ -1420,7 +1446,11 @@ const BADGES = [
  {id:"weigh4",i:"⚖️", n:"4 أوزان",     f:()=>S.weights.length>=4},
  {id:"down2", i:"📉", n:"ناقص 2 كجم",  f:()=>S.weights.length>1 && (S.weights[0].kg-S.weights[S.weights.length-1].kg)>=2},
  {id:"labs",  i:"🧪", n:"ملف مكتمل",   f:()=>S.labs.length>=5},
- {id:"routine",i:"✅", n:"روتين كامل", f:()=>{const r=S.routine[today()]||{};return ROUTINE.every(x=>r[x.id])}},
+ {id:"routine",i:"✅", n:"روتين كامل", f:()=>{const t=today(); const r=S.routine[t]||{};
+   const log=(S.suppLog&&S.suppLog[t])||{};
+   const act=S.supps.filter(x=>x.ok);
+   const suppOk = act.length ? S.supps.every((x,i)=>!x.ok||log[i]) : true;
+   return ROUTINE.every(x=>x.link?suppOk:r[x.id]);}},
  {id:"steps8", i:"👣", n:"8000 خطوة", f:()=>((S.move&&S.move[today()]||{}).steps||0)>=8000},
  {id:"multi",  i:"🎽", n:"نشاطان بجلسة", f:()=>S.workouts.some(w=>w.parts&&w.parts.length>=2)},
  {id:"jog",    i:"🏃", n:"أول هرولة", f:()=>S.workouts.some(w=>w.jog||(w.type&&w.type.indexOf("هرولة")>=0))},
@@ -1505,24 +1535,36 @@ function renderHeat(){
   const el=document.getElementById('heat'); if(!el) return;
   const names=["أحد","إثن","ثلا","أرب","خمي","جمع","سبت"];
   const map={}; S.workouts.forEach(w=>{ map[w.date]=(map[w.date]||0)+(w.min||0); });
-  let cells='';
-  const base=new Date(); base.setDate(base.getDate()-27);
-  for(let i=0;i<28;i++){
-    const d=new Date(base); d.setDate(base.getDate()+i);
+
+  const end=new Date(); end.setHours(12,0,0,0);
+  const start=new Date(end); start.setDate(end.getDate()-27);
+  start.setDate(start.getDate()-start.getDay());      // ارجع لأحد ذلك الأسبوع
+
+  const bgs=["#EDF2F0","#CDE6DB","#8FCBB8","#4FA184","#175E4E"];
+  const months=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+  let cells='', mset=new Set();
+  const d=new Date(start);
+  while(d<=end){
     const k=d.toISOString().slice(0,10);
     const m=map[k]||0;
     const lvl = m===0?0 : m<20?1 : m<35?2 : m<50?3 : 4;
-    const bgs=["#EDF2F0","#CDE6DB","#8FCBB8","#4FA184","#175E4E"];
     const isToday = k===today();
+    const first = d.getDate()===1;
+    mset.add(months[d.getMonth()]);
     cells+=`<div class="hc" style="background:${bgs[lvl]};color:${lvl>2?'#fff':'#8AA096'};
-      ${isToday?'outline:2px solid #C9922B;outline-offset:1px':''}">${d.getDate()}</div>`;
+      ${isToday?'outline:2px solid #C9922B;outline-offset:1px;font-weight:700':''}
+      ${first?'box-shadow:inset 0 0 0 1px #C9922B55':''}">${d.getDate()}</div>`;
+    d.setDate(d.getDate()+1);
   }
-  el.innerHTML=`<div class="hlab">${names.map(n=>`<div>${n}</div>`).join('')}</div>
+  const span=[...mset].join(' – ');
+  el.innerHTML=`<div style="font-size:11.5px;color:var(--mute);margin-bottom:7px">${span} ${end.getFullYear()}</div>
+    <div class="hlab">${names.map(n=>`<div>${n}</div>`).join('')}</div>
     <div class="heat">${cells}</div>
     <div class="legend" style="justify-content:flex-start;margin-top:9px">
-      <span><i style="background:#EDF2F0"></i>راحة</span>
+      <span><i style="background:#EDF2F0"></i>بلا تمرين</span>
       <span><i style="background:#8FCBB8"></i>خفيف</span>
-      <span><i style="background:#175E4E"></i>قوي</span></div>`;
+      <span><i style="background:#175E4E"></i>قوي</span>
+      <span><i style="border:2px solid #C9922B;background:none"></i>اليوم</span></div>`;
 }
 
 function renderDonut(){
