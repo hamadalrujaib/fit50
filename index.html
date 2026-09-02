@@ -418,6 +418,8 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
   </div>
   <div class="wrap">
     <div class="card">
+      <label class="f">إلى أي وجبة تضيف؟</label>
+      <div id="mealPick"></div>
       <label class="f">ابحث عن طعام</label>
       <input class="in" id="fq" placeholder="مثال: دجاج، أرز، لبن" oninput="searchFood()">
       <div class="fres" id="fres"></div>
@@ -662,7 +664,7 @@ let S = {
 };
 const today = () => new Date().toISOString().slice(0,10);
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 8;
+const APP_VER = 9;
 
 let STORE_OK = null;
 
@@ -836,7 +838,7 @@ function render(){
        ${st>1?`<div class="streak">🔥 ${st} أيام متتالية</div>`:''}
      </div></div>`;
 
-  renderHeadStats();
+  renderHeadStats(); renderMealPick();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros(); renderMacroMini(); renderKpis();
   renderInfo(); renderBadges(); renderHeat(); renderMove(); renderActSel();
   renderLabs(); renderSupps(); renderAppts(); renderBody();
@@ -1018,6 +1020,12 @@ function delW(i){ S.workouts.splice(i,1); save(); renderLog(); renderKpis(); }
 /* ============================================================
    التغذية
    ============================================================ */
+function renderMealPick(){
+  const el=document.getElementById('mealPick'); if(!el) return;
+  if(!pickMeal) pickMeal=mealByHour();
+  el.innerHTML=mealChips(pickMeal);
+}
+
 function searchFood(){
   const q=document.getElementById('fq').value.trim();
   const box=document.getElementById('fres');
@@ -1033,25 +1041,53 @@ function searchFood(){
 function addFood(n,k,p,c,su,f){
   const t=today();
   S.nutrition[t]=S.nutrition[t]||[];
-  S.nutrition[t].push({n:n,k:k,p:p,c:c||0,su:su||0,f:f||0});
-  save(); renderEnergy(); renderMeals(); renderBadges(); renderInfo(); renderMacros();
+  S.nutrition[t].push({n:n,k:k,p:p,c:c||0,su:su||0,f:f||0,m:pickMeal||mealByHour()});
+  save(); renderEnergy(); renderMeals(); renderBadges(); renderInfo(); renderMacros(); renderMealPick();
   toast("أُضيف: "+n);
 }
 function renderMeals(){
   const t=today(); const m=S.nutrition[t]||[];
   const el=document.getElementById('mealList');
   if(!m.length){ el.innerHTML=`<div class="empty">لم تسجّل شيئًا اليوم بعد.</div>`; return; }
-  const k=m.reduce((a,x)=>a+x.k,0), p=m.reduce((a,x)=>a+x.p,0), d=dayMacros();
-  el.innerHTML=m.map((x,i)=>
-    `<div class="row"><div class="rt"><b>${x.n}</b>
-       <span>${x.c===undefined&&x.su===undefined&&x.f===undefined
-         ? 'بروتين '+x.p+' · سُجّل قبل التفصيل'
-         : 'بروتين '+x.p+' · نشويات '+(x.c||0)+' · سكر '+(x.su||0)+' · دهون '+(x.f||0)}</span></div>
-     <div class="rr">${x.k}</div><button class="x" onclick="delMeal(${i})">×</button></div>`).join('')
-   +`<div class="row" style="border-top:2px solid #E3EAE7;border-bottom:none">
-      <div class="rt"><b>المجموع</b><span>بروتين ${Math.round(d.p)} · نشويات ${Math.round(d.c)} · سكر ${Math.round(d.su)} · دهون ${Math.round(d.f)}</span></div>
-      <div class="rr" style="font-size:17px">${Math.round(k)}</div></div>`;
+
+  const groups={};
+  m.forEach((x,i)=>{ const k=x.m||"u"; (groups[k]=groups[k]||[]).push({x:x,i:i}); });
+
+  const order=["b","l","d","s","u"];
+  let html='';
+  order.forEach(k=>{
+    const g=groups[k]; if(!g||!g.length) return;
+    const info=mealInfo(k);
+    const gk=g.reduce((a,o)=>a+o.x.k,0), gp=g.reduce((a,o)=>a+o.x.p,0);
+    const protOk=gp>=25;
+    html+=`<div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 2px 7px;border-bottom:2px solid ${info.c}22">
+        <span style="width:26px;height:26px;border-radius:9px;background:${info.c}1A;
+          display:flex;align-items:center;justify-content:center;font-size:13px">${info.i}</span>
+        <b style="flex:1;font-size:14px;color:${info.c};font-family:'Cairo',sans-serif">${info.n}</b>
+        <span style="font-size:11.5px;color:${protOk?'#2F8F6E':'var(--mute)'};font-weight:700">
+          بروتين ${Math.round(gp)} غ</span>
+        <b style="font-size:15px">${Math.round(gk)}</b>
+      </div>`;
+    g.forEach(o=>{
+      const x=o.x;
+      html+=`<div class="row"><div class="rt" onclick="moveMeal(${o.i})"><b>${esc(x.n)}</b>
+         <span>${x.c===undefined&&x.su===undefined&&x.f===undefined
+           ? 'بروتين '+x.p+' · سُجّل قبل التفصيل'
+           : 'بروتين '+x.p+' · نشويات '+(x.c||0)+' · سكر '+(x.su||0)+' · دهون '+(x.f||0)}</span></div>
+        <div class="rr">${x.k}</div><button class="x" onclick="delMeal(${o.i})">×</button></div>`;
+    });
+    html+='</div>';
+  });
+
+  const k=m.reduce((a,x)=>a+x.k,0), d=dayMacros();
+  html+=`<div class="row" style="border-top:2px solid #E3EAE7;border-bottom:none">
+      <div class="rt"><b>مجموع اليوم</b><span>بروتين ${Math.round(d.p)} · نشويات ${Math.round(d.c)} · سكر ${Math.round(d.su)} · دهون ${Math.round(d.f)}</span></div>
+      <div class="rr" style="font-size:17px">${Math.round(k)}</div></div>
+    <div class="note">اضغط على أي صنف لنقله إلى وجبة أخرى.</div>`;
+  el.innerHTML=html;
 }
+
 function delMeal(i){
   const t=today(); S.nutrition[t].splice(i,1); save(); renderEnergy(); renderMeals(); renderMacros();
 }
@@ -2106,6 +2142,55 @@ function renderBody(){
   const hist=S.body.length>1?`<div class="note">مقارنة بأول قياس (${first.date}) · ${S.body.length} قياسات مسجّلة</div>`:'';
   el.innerHTML=`<div>${rows}</div>${comp}${hist}
     <button class="btn ghost" onclick="openBody()">سجّل قياسًا جديدًا</button>`;
+}
+
+
+/* ============================================================
+   تقسيم الوجبات
+   ============================================================ */
+const MEALS=[
+ {k:"b", n:"الفطور", i:"🌅", c:"#C9922B", h:[4,11]},
+ {k:"l", n:"الغداء", i:"🍽️", c:"#B4531F", h:[11,17]},
+ {k:"d", n:"العشاء", i:"🌙", c:"#1C6E8C", h:[17,23]},
+ {k:"s", n:"سناك",   i:"🥜", c:"#2F7A3E", h:null},
+ {k:"u", n:"غير مصنّف", i:"•", c:"#7D908A", h:null}
+];
+function mealByHour(){
+  const h=new Date().getHours();
+  for(const m of MEALS) if(m.h && h>=m.h[0] && h<m.h[1]) return m.k;
+  return "s";
+}
+function mealInfo(k){ return MEALS.find(m=>m.k===k) || MEALS[4]; }
+
+let pickMeal=null;   // الوجبة المختارة عند الإضافة
+
+function mealChips(sel){
+  return `<div class="chipsel" id="mealSel">
+    ${MEALS.filter(m=>m.k!=="u").map(m=>
+      `<button class="${sel===m.k?'on':''}" onclick="setMeal('${m.k}',this)">${m.i} ${m.n}</button>`).join('')}
+  </div>`;
+}
+function setMeal(k,el){
+  pickMeal=k;
+  document.querySelectorAll('#mealSel button').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+}
+
+function moveMeal(i){
+  const t=today(); const item=(S.nutrition[t]||[])[i]; if(!item) return;
+  document.getElementById('sheet').innerHTML=
+  `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+     <h3>${esc(item.n)}</h3>
+     <div class="sub">اختر الوجبة التي ينتمي إليها.</div>
+     <div class="chipsel">
+       ${MEALS.filter(m=>m.k!=="u").map(m=>
+         `<button class="${item.m===m.k?'on':''}" onclick="doMove(${i},'${m.k}')">${m.i} ${m.n}</button>`).join('')}
+     </div>
+     <button class="btn ghost" onclick="closeSheet()">إغلاق</button>
+   </div></div>`;
+}
+function doMove(i,k){
+  const t=today(); S.nutrition[t][i].m=k; save(); closeSheet(); renderMeals(); toast("نُقل إلى "+mealInfo(k).n);
 }
 
 /* بدء التشغيل */
