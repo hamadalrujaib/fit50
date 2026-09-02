@@ -453,11 +453,22 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
         <button class="btn" style="width:auto;margin:0;padding:0 20px" onclick="saveWeight()">حفظ</button>
       </div>
       <div class="note">زن نفسك صباحًا، بعد الحمام، قبل الأكل — نفس اليوم كل أسبوع.</div>
+      <button class="btn g" onclick="openBody()">⚖️ سجّل قياس الميزان الذكي</button>
+    </div>
+
+    <div class="sec" style="margin-top:16px">
+      <h2>تكوين الجسم</h2>
+      <div class="card" id="bodyCard"></div>
     </div>
 
     <div class="sec" style="margin-top:16px">
       <h2>الوزن</h2>
       <div class="card"><div id="chWeight"></div></div>
+    </div>
+
+    <div class="sec">
+      <h2>نسبة الدهون ودهون الأحشاء</h2>
+      <div class="card"><div id="chFat"></div><div style="margin-top:14px"></div><div id="chVf"></div></div>
     </div>
 
     <div class="sec">
@@ -647,11 +658,11 @@ const APPTS = [];
 let S = {
   target:1850, protTarget:115, waterTarget:8,
   workouts:[], weights:[], nutrition:{}, routine:{}, water:{},
-  labs:[], supps:[], appts:[], badges:[], move:{}, suppLog:{}
+  labs:[], supps:[], appts:[], badges:[], move:{}, suppLog:{}, body:[]
 };
 const today = () => new Date().toISOString().slice(0,10);
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 7;
+const APP_VER = 8;
 
 let STORE_OK = null;
 
@@ -828,7 +839,7 @@ function render(){
   renderHeadStats();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros(); renderMacroMini(); renderKpis();
   renderInfo(); renderBadges(); renderHeat(); renderMove(); renderActSel();
-  renderLabs(); renderSupps(); renderAppts();
+  renderLabs(); renderSupps(); renderAppts(); renderBody();
 }
 
 function shade(hex,p){
@@ -1133,6 +1144,15 @@ function barChart(data,color){
 }
 
 function drawCharts(){
+  const fat=S.body.filter(x=>x.fat!==undefined).slice(-12).map(x=>({v:x.fat,l:x.date.slice(5)}));
+  const e1=document.getElementById('chFat');
+  if(e1) e1.innerHTML=`<div style="font-size:12px;color:#7D908A;margin-bottom:4px">نسبة الدهون ٪</div>`
+    + lineChart(fat,"#B4531F","٪",true);
+  const vf=S.body.filter(x=>x.vf!==undefined).slice(-12).map(x=>({v:x.vf,l:x.date.slice(5)}));
+  const e2=document.getElementById('chVf');
+  if(e2) e2.innerHTML=`<div style="font-size:12px;color:#7D908A;margin-bottom:4px">دهون الأحشاء</div>`
+    + lineChart(vf,"#9E2B36","",true);
+  renderBody();
   const w=S.weights.slice(-12).map(x=>({v:x.kg,l:x.date.slice(5)}));
   document.getElementById('chWeight').innerHTML = lineChart(w,"#0C3B32","كجم",true);
 
@@ -1940,21 +1960,152 @@ function sceneSVG(){
 /* ============================================================
    شريط الترويسة
    ============================================================ */
-const QUIT_DATE = "2026-07-28";
+/* عدّاد النيكوتين اختياري — يُفعّل من شاشة صحتي */
+
+function commitPct(){
+  // نسبة الالتزام خلال آخر 28 يومًا (أيام التمرين المقررة: الأحد–الخميس)
+  const done=new Set(S.workouts.map(w=>w.date));
+  let planned=0, hit=0; const d=new Date();
+  for(let i=0;i<28;i++){
+    const k=d.toISOString().slice(0,10), dow=d.getDay();
+    if(dow!==5 && dow!==6){ planned++; if(done.has(k)) hit++; }
+    d.setDate(d.getDate()-1);
+  }
+  return planned?Math.round(hit/planned*100):0;
+}
+
+function activeWeeks(){
+  const wk={};
+  S.workouts.forEach(x=>{
+    const d=new Date(x.date), s=new Date(d); s.setDate(d.getDate()-d.getDay());
+    const k=s.toISOString().slice(0,10);
+    wk[k]=(wk[k]||0)+1;
+  });
+  return Object.values(wk).filter(n=>n>=3).length;
+}
+
+function fatDelta(){
+  const b=S.body.filter(x=>x.fat!==undefined);
+  if(b.length<2) return null;
+  return +(b[b.length-1].fat - b[0].fat).toFixed(1);
+}
 
 function renderHeadStats(){
   const el=document.getElementById('headStats'); if(!el) return;
-  const days = Math.max(0, Math.floor((Date.now()-new Date(QUIT_DATE).getTime())/864e5));
-  const w = S.weights.slice(-1)[0];
-  const st = streak();
-  const mins = S.workouts.filter(x=>Date.now()-new Date(x.date).getTime() < 7*864e5)
-                         .reduce((a,x)=>a+(x.min||0),0);
+  const pct=commitPct(), aw=activeWeeks(), fd=fatDelta();
+  const mins=S.workouts.filter(x=>Date.now()-new Date(x.date).getTime()<7*864e5)
+                       .reduce((a,x)=>a+(x.min||0),0);
+  const b=S.body.filter(x=>x.fat!==undefined);
+  const fatTxt = fd===null ? (b.length?b[b.length-1].fat:"—") : (fd>0?"+"+fd:fd);
+  const fatLbl = fd===null ? "نسبة الدهون ٪" : "تغيّر الدهون ٪";
+  const fatCol = fd===null ? "" : (fd<0?"style=\"color:#8FE0BC\"":(fd>0?"style=\"color:#F3A9A9\"":""));
   el.innerHTML=`<div class="hstats">
-    <div class="hs gold"><b>${days}</b><span>يومًا بلا نيكوتين</span></div>
-    <div class="hs"><b>${st||0}</b><span>أيام متتالية</span></div>
-    <div class="hs"><b>${w?w.kg:"—"}</b><span>الوزن كجم</span></div>
+    <div class="hs gold"><b>${pct}٪</b><span>التزام 4 أسابيع</span></div>
+    <div class="hs"><b>${aw}</b><span>أسابيع نشطة</span></div>
+    <div class="hs"><b ${fatCol}>${fatTxt}</b><span>${fatLbl}</span></div>
     <div class="hs"><b>${mins||0}</b><span>دقائق الأسبوع</span></div>
   </div>`;
+}
+
+
+/* ============================================================
+   قياس الميزان الذكي
+   ============================================================ */
+const BODY_F=[
+ {k:"w",   n:"الوزن",            u:"كجم",   good:"down"},
+ {k:"fat", n:"نسبة الدهون",      u:"٪",     good:"down", tgt:20},
+ {k:"vf",  n:"دهون الأحشاء",     u:"",      good:"down", tgt:9},
+ {k:"smm", n:"العضلات الهيكلية", u:"كجم",   good:"up"},
+ {k:"mm",  n:"الكتلة العضلية",   u:"كجم",   good:"up"},
+ {k:"bmi", n:"مؤشر كتلة الجسم",  u:"",      good:"down", tgt:24.9},
+ {k:"bmr", n:"الأيض الأساسي",    u:"سعرة",  good:"up"},
+ {k:"wat", n:"نسبة الماء",       u:"٪",     good:"up"},
+ {k:"prt", n:"البروتين",         u:"٪",     good:"up"},
+ {k:"bon", n:"المعادن العظمية",  u:"كجم",   good:"up"}
+];
+
+function openBody(){
+  const last=S.body.slice(-1)[0]||{};
+  document.getElementById('sheet').innerHTML=
+  `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+     <h3>قياس الميزان الذكي</h3>
+     <div class="sub">انقل الأرقام من تطبيق الميزان. اترك أي خانة فارغة إن لم تتوفر.</div>
+     <div class="warn" style="margin-bottom:12px">قِس صباحًا بعد الحمام وقبل الأكل، ونفس اليوم كل أسبوع — القياس المسائي أعلى بكيلو أو اثنين.</div>
+     ${BODY_F.map(f=>`<label class="f">${f.n} ${f.u?'('+f.u+')':''}</label>
+       <input class="in" id="bd_${f.k}" type="number" inputmode="decimal" step="0.1"
+         placeholder="${last[f.k]!==undefined?last[f.k]:''}">`).join('')}
+     <button class="btn" onclick="saveBody()">احفظ القياس</button>
+     <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+   </div></div>`;
+}
+
+function saveBody(){
+  const o={date:today()};
+  let any=false;
+  BODY_F.forEach(f=>{
+    const e=document.getElementById('bd_'+f.k);
+    if(e && e.value!==''){ o[f.k]=parseFloat(e.value); any=true; }
+  });
+  if(!any){ toast("أدخل قيمة واحدة على الأقل"); return; }
+  const ex=S.body.findIndex(x=>x.date===o.date);
+  if(ex>=0) S.body[ex]=Object.assign(S.body[ex],o); else S.body.push(o);
+  if(o.w){
+    const wi=S.weights.findIndex(x=>x.date===o.date);
+    if(wi>=0) S.weights[wi].kg=o.w; else S.weights.push({date:o.date,kg:o.w});
+  }
+  save(); closeSheet(); renderBody(); drawCharts(); renderKpis(); renderHeadStats(); renderBadges();
+  toast("سُجّل القياس");
+}
+
+function renderBody(){
+  const el=document.getElementById('bodyCard'); if(!el) return;
+  if(!S.body.length){
+    el.innerHTML=`<div style="font-size:12.5px;color:var(--ink2);line-height:1.9">
+      لم تسجّل قياسًا بعد. الميزان الذكي يعطيك ما لا يعطيه الوزن وحده:
+      نسبة الدهون، دهون الأحشاء، والكتلة العضلية.</div>
+      <div class="note">أهم رقم لك هو <b style="color:#9E2B36">دهون الأحشاء</b> — هو المرتبط مباشرة بالكبد الدهني. المثالي أقل من 9.</div>`;
+    return;
+  }
+  const cur=S.body[S.body.length-1], first=S.body[0];
+  const rows=BODY_F.filter(f=>cur[f.k]!==undefined).map(f=>{
+    const v=cur[f.k], f0=first[f.k];
+    let delta='', dc='#7D908A';
+    if(f0!==undefined && S.body.length>1){
+      const d=+(v-f0).toFixed(1);
+      if(d!==0){
+        const improving = f.good==='down' ? d<0 : d>0;
+        dc = improving?'#2F8F6E':'#B4531F';
+        delta=`<b style="color:${dc};font-size:12px">${d>0?'+':''}${d}</b>`;
+      } else delta=`<span style="font-size:12px;color:#9AACA6">ثابت</span>`;
+    }
+    let flag='';
+    if(f.tgt!==undefined){
+      const ok = f.good==='down' ? v<=f.tgt : v>=f.tgt;
+      flag=`<span class="tag" style="background:${ok?'#2F8F6E18':'#C9922B18'};color:${ok?'#2F8F6E':'#C9922B'}">${ok?'ضمن الهدف':'الهدف '+f.tgt}</span>`;
+    }
+    return `<div class="lab"><div class="ln"><b>${f.n}</b><span>${flag}</span></div>
+      <div style="text-align:left"><div class="lv">${v}<span style="font-size:11px;color:#9AACA6"> ${f.u}</span></div>
+      ${delta?`<div>${delta}</div>`:''}</div></div>`;
+  }).join('');
+
+  let comp='';
+  if(cur.w && cur.fat!==undefined){
+    const fatkg=+(cur.w*cur.fat/100).toFixed(1), lean=+(cur.w-fatkg).toFixed(1);
+    const tgt=+(lean/0.80).toFixed(1);
+    comp=`<div class="card" style="margin-top:12px;background:#F2F6F4">
+      <div style="display:flex;gap:12px;text-align:center">
+        <div style="flex:1"><div class="hero-num" style="font-size:22px;color:#B4531F">${fatkg}</div>
+          <div style="font-size:10.5px;color:#7D908A">كجم دهون</div></div>
+        <div style="flex:1"><div class="hero-num" style="font-size:22px;color:#2F8F6E">${lean}</div>
+          <div style="font-size:10.5px;color:#7D908A">كجم كتلة صافية</div></div>
+        <div style="flex:1"><div class="hero-num" style="font-size:22px;color:#0C3B32">${tgt}</div>
+          <div style="font-size:10.5px;color:#7D908A">وزن هدف 20٪</div></div>
+      </div></div>`;
+  }
+
+  const hist=S.body.length>1?`<div class="note">مقارنة بأول قياس (${first.date}) · ${S.body.length} قياسات مسجّلة</div>`:'';
+  el.innerHTML=`<div>${rows}</div>${comp}${hist}
+    <button class="btn ghost" onclick="openBody()">سجّل قياسًا جديدًا</button>`;
 }
 
 /* بدء التشغيل */
