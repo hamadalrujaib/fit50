@@ -440,6 +440,7 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
       <div class="fres" id="fres"></div>
       <button class="btn ghost" onclick="openCustom()">أضف صنفًا غير موجود</button>
       <button class="btn g" onclick="openCam()">📷 صوّر وجبتك وقدّر سعراتها</button>
+      <button class="btn ghost" onclick="openMix()">🥤 احسب عصيرك بمكوّناته</button>
       <input type="file" id="camIn" accept="image/*" capture="environment"
              style="display:none" onchange="onShot(this)">
     </div>
@@ -666,7 +667,40 @@ const FOODS = [
   ["كيك (قطعة)",290,4,40,26,13],
   ["قهوة بحليب",60,3,6,6,2.5],
   ["ماء غازي دايت",1,0,0,0,0],
-  ["بروتين بار",210,20,22,3,7]
+  ["بروتين بار",210,20,22,3,7],
+  ["عصير الخلطة (برتقالة+تفاحة+جزر+شمندر+سيليري+زنجبيل+كركم)",245,4,60,41,1],
+  ["عصير الخلطة — نصف كوب",123,2,30,20,0.5],
+  ["عصير الخلطة ببرتقالتين وتفاحة",305,4.9,74,52,1.2],
+  ["عصير الخلطة بلا تفاح وبرتقال (جزر+شمندر+سيليري+زنجبيل+كركم)",90,2.5,21,11,0.5],
+  ["عصير جزر (كوب)",95,2.2,22,10,0.4],
+  ["عصير شمندر (كوب)",110,2,25,20,0.4],
+  ["عصير تفاح طبيعي (كوب)",114,0.3,28,24,0.3],
+  ["عصير رمان (كوب)",134,0.4,33,31,0.7],
+  ["عصير مانجو (كوب)",130,1,32,29,0.5],
+  ["عصير ليمون بالنعناع (كوب)",60,0.4,15,13,0.1],
+  ["عصير أخضر (سبانخ+خيار+ليمون+زنجبيل)",70,2.5,15,7,0.5],
+  ["ماء جوز الهند (كوب)",46,1.7,9,6,0.5],
+  ["سموذي فواكه بالحليب (كوب)",220,6,40,32,4],
+  ["شوت زنجبيل وكركم (30 مل)",15,0.2,3,1,0.1],
+  ["زبادي يوناني ندى (علبة 160غ)",106,11.2,8,8,3.2],
+  ["زبادي يوناني ندى (نصف علبة 80غ)",53,5.6,4,4,1.6],
+  ["توتيات مشكّلة (100غ)",50,1,12,8,0.4],
+  ["توت أزرق (100غ)",57,0.7,14,10,0.3],
+  ["فراولة (100غ)",32,0.7,7.7,4.9,0.3],
+  ["زبدة فول سوداني نقية (م.ك)",94,4,3,1.5,8],
+  ["عسل (ملعقة صغيرة)",21,0,5.7,5.7,0],
+  ["جرانولا (30غ)",130,3,18,6,5],
+  ["جرانولا بلا سكر مضاف (30غ)",120,4,15,2,5.5],
+  ["بذور شيا (م.ك)",58,2,5,0,3.7],
+  ["حب القرع (ربع كف ≈15غ)",90,5,2,0,8],
+  ["حب القرع (كف ≈60غ)",360,19,7,0,31],
+  ["مكسرات نيئة مبشورة مشكّلة (30غ)",180,6,6,2,16],
+  ["مكسرات نيئة مبشورة (م.ك ≈10غ)",60,2,2,0.7,5.3],
+  ["كاجو نيء (30غ)",157,5.2,9,1.7,12.4],
+  ["جوز (30غ)",185,4.3,4,0.7,18.5],
+  ["بندق (30غ)",178,4.2,4.7,1.3,17.2],
+  ["عصير الخلطة بلا تفاح (برتقالة+جزر+شمندر+سيليري+زنجبيل+كركم)",150,3.5,35,22,0.8],
+  ["عصير الخلطة بلا تفاح + خيارة",166,4.2,39,24,0.9]
 ];
 
 const LABS = [];
@@ -692,7 +726,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 17;
+const APP_VER = 22;
 
 let STORE_OK = null;
 
@@ -1069,8 +1103,9 @@ function renderLog(){
     if(w.max&&w.rec) bits.push("تعافي -"+(w.max-w.rec));
     const ic = w.parts ? w.parts.map(p=>p.icon).join(" ") : "🏃";
     return `<div class="row">
-      <div class="rt"><b>${ic} ${w.type}</b><span>${w.date} · ${bits.join(" · ")}</span></div>
-      <button class="x" onclick="delW(${idx})">×</button></div>`;
+      <div class="rt" onclick="editWorkout(${idx})"><b>${ic} ${w.type}</b>
+        <span>${w.date} · ${bits.join(" · ")}</span></div>
+      <span style="color:#C3CFCA;font-size:16px;flex:none" onclick="editWorkout(${idx})">✎</span></div>`;
   }).join('')+`</div>`;
 }
 function delW(i){ S.workouts.splice(i,1); save(); renderLog(); renderKpis(); }
@@ -2748,6 +2783,171 @@ function saveQuick(){
   }
   save(); closeSheet(); renderBody(); drawCharts(); renderKpis(); renderHeadStats(); renderBadges();
   toast("سُجّل القياس");
+}
+
+
+/* ============================================================
+   تعديل جلسة محفوظة
+   ============================================================ */
+function editWorkout(i){
+  const w=S.workouts[i]; if(!w) return;
+  const parts=w.parts||[{name:w.type||'نشاط',icon:'🏃',min:w.min,km:w.km,kcal:w.kcal}];
+  document.getElementById('sheet').innerHTML=
+  `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+     <h3>تعديل الجلسة</h3>
+     <div class="sub">${w.date} · ${esc(w.type||'')}</div>
+     ${parts.map((p,j)=>{
+       const a=ACTS.find(x=>x.k===p.name);
+       const flds=a?a.f:["min","km","kcal"];
+       return `<div class="card" style="margin-bottom:9px;padding:12px 13px">
+         <b style="font-size:14px">${p.icon||'🏃'} ${esc(p.name)}</b>
+         <div class="grid3" style="margin-top:8px">
+           ${flds.map(f=>`<div><label class="f" style="margin:0 0 4px">${FLAB[f]}</label>
+             <input class="in" id="ep${j}_${f}" type="number" inputmode="decimal" style="padding:9px"
+               value="${p[f]!==undefined&&p[f]!==null?p[f]:''}"></div>`).join('')}
+         </div></div>`;
+     }).join('')}
+     <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:4px">
+       <label class="f">قياسات النبض</label>
+       <div class="grid3">
+         <div><label class="f" style="margin-top:0">متوسط</label>
+           <input class="in" id="eAvg" type="number" inputmode="numeric" value="${w.avg??''}"></div>
+         <div><label class="f" style="margin-top:0">أقصى</label>
+           <input class="in" id="eMax" type="number" inputmode="numeric" value="${w.max??''}"></div>
+         <div><label class="f" style="margin-top:0">بعد 60 ث</label>
+           <input class="in" id="eRec" type="number" inputmode="numeric" value="${w.rec??''}"></div>
+       </div>
+       <div class="note">اترك خانة «بعد 60 ث» فارغة إن لم تقس التعافي بشكل صحيح — أفضل من رقم مضلل.</div>
+       <label class="f">ملاحظة</label>
+       <input class="in" id="eNote" value="${esc(w.note||'')}">
+     </div>
+     <button class="btn" onclick="saveEdit(${i})">احفظ التعديل</button>
+     <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+     <button class="btn ghost" style="color:#9E2B36" onclick="confirmDel(${i})">احذف الجلسة</button>
+   </div></div>`;
+}
+
+function saveEdit(i){
+  const w=S.workouts[i]; if(!w) return;
+  const g=id=>{const e=document.getElementById(id); if(!e||e.value==='')return null; return parseFloat(e.value);};
+  const parts=w.parts||[{name:w.type||'نشاط',icon:'🏃'}];
+  let totMin=0,totKm=0,totKcal=0,jog=0,spdmax=0;
+  parts.forEach((p,j)=>{
+    const a=ACTS.find(x=>x.k===p.name);
+    const flds=a?a.f:["min","km","kcal"];
+    flds.forEach(f=>{ const v=g('ep'+j+'_'+f); if(v!==null) p[f]=v; else delete p[f]; });
+    if(p.min==null){ p.min=0; }
+    if(p.spd==null && p.km && p.min) p.spd=Math.round(p.km/(p.min/60)*10)/10;
+    totMin+=p.min||0; totKm+=p.km||0; totKcal+=p.kcal||0; jog+=p.jog||0;
+    spdmax=Math.max(spdmax,p.spdmax||0);
+  });
+  if(!totMin){ toast("أدخل مدة الجلسة"); return; }
+  w.parts=parts; w.min=totMin;
+  w.km=totKm||null; w.kcal=totKcal||null; w.jog=jog||null; w.spdmax=spdmax||null;
+  w.spd = totKm&&totMin ? Math.round(totKm/(totMin/60)*10)/10 : null;
+  w.avg=g('eAvg'); w.max=g('eMax'); w.rec=g('eRec');
+  w.note=document.getElementById('eNote').value;
+  save(); closeSheet(); renderLog(); renderKpis(); renderInfo(); renderHeat(); renderBadges();
+  toast("حُفظ التعديل");
+}
+
+function confirmDel(i){
+  const w=S.workouts[i];
+  document.getElementById('sheet').innerHTML=
+  `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+     <h3>حذف الجلسة</h3>
+     <div class="sub">${w.date} · ${esc(w.type||'')} — لا يمكن التراجع.</div>
+     <button class="btn" style="background:#9E2B36" onclick="delW(${i});closeSheet()">نعم، احذفها</button>
+     <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+   </div></div>`;
+}
+
+
+/* ============================================================
+   بنّاء العصير — اجمع المكوّنات واحسب
+   ============================================================ */
+const JUICE=[
+ {n:"برتقالة",       k:60, p:0.9, c:14,  su:11,  f:0.2},
+ {n:"تفاحة",         k:95, p:0.5, c:25,  su:19,  f:0.3},
+ {n:"جزرة",          k:25, p:0.6, c:6,   su:3,   f:0.15},
+ {n:"شمندر (نصف)",   k:25, p:1,   c:6,   su:4,   f:0.1},
+ {n:"عود سيليري",    k:6,  p:0.3, c:1.2, su:0.6, f:0},
+ {n:"زنجبيل طازج",   k:4,  p:0.1, c:1,   su:0.1, f:0},
+ {n:"كركم طازج",     k:5,  p:0.1, c:1,   su:0.1, f:0.1},
+ {n:"خيارة",         k:16, p:0.7, c:3.6, su:1.7, f:0.1},
+ {n:"ليمونة",        k:17, p:0.6, c:5.4, su:1.5, f:0.2},
+ {n:"سبانخ (حفنة)",  k:7,  p:0.9, c:1.1, su:0.1, f:0.1},
+ {n:"أناناس (شريحة)",k:42, p:0.5, c:11,  su:8,   f:0.1},
+ {n:"رمانة (نصف)",   k:72, p:1.5, c:16,  su:12,  f:1}
+];
+let mixCount={};
+
+function openMix(){
+  mixCount={};
+  document.getElementById('sheet').innerHTML=
+  `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+     <h3>احسب عصيرك</h3>
+     <div class="sub">اضغط على كل مكوّن بعدد ما وضعته في العصّارة.</div>
+     <div id="mixList"></div>
+     <div id="mixOut" style="margin-top:12px"></div>
+     <button class="btn" onclick="saveMix()">أضف إلى اليوم</button>
+     <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
+     <div class="note">العصر يزيل الألياف ويُبقي السكر. النتيجة تُحسب كسكريات كاملة.</div>
+   </div></div>`;
+  renderMix();
+}
+
+function renderMix(){
+  const el=document.getElementById('mixList'); if(!el) return;
+  el.innerHTML=JUICE.map((j,i)=>{
+    const n=mixCount[i]||0;
+    return `<div class="fitem">
+      <div class="fn">${j.n}<div style="font-size:10.5px;color:#9AACA6">${j.k} سعرة · سكر ${j.su}</div></div>
+      ${n?`<button class="add" style="background:#FBEDEE;color:#9E2B36" onclick="mixAdd(${i},-1)">−</button>
+           <b style="min-width:20px;text-align:center">${n}</b>`:''}
+      <button class="add" onclick="mixAdd(${i},1)">+</button></div>`;
+  }).join('');
+  calcMix();
+}
+function mixAdd(i,d){
+  mixCount[i]=Math.max(0,(mixCount[i]||0)+d);
+  if(!mixCount[i]) delete mixCount[i];
+  renderMix();
+}
+function mixTotals(){
+  const t={k:0,p:0,c:0,su:0,f:0,names:[]};
+  Object.keys(mixCount).forEach(i=>{
+    const j=JUICE[i], n=mixCount[i];
+    t.k+=j.k*n; t.p+=j.p*n; t.c+=j.c*n; t.su+=j.su*n; t.f+=j.f*n;
+    t.names.push(n>1? j.n+"×"+n : j.n);
+  });
+  return t;
+}
+function calcMix(){
+  const el=document.getElementById('mixOut'); if(!el) return;
+  const t=mixTotals();
+  if(!t.k){ el.innerHTML=''; return; }
+  const suPct=Math.round(t.su*4/t.k*100);
+  const lim=Math.round(S.target*0.10/4);
+  el.innerHTML=`<div class="card" style="background:#F2F6F4">
+    <div style="display:flex;gap:10px;text-align:center">
+      <div style="flex:1"><div class="hero-num" style="font-size:23px;color:#0C3B32">${Math.round(t.k)}</div>
+        <div style="font-size:10.5px;color:#7D908A">سعرة</div></div>
+      <div style="flex:1"><div class="hero-num" style="font-size:23px;color:#9E2B36">${Math.round(t.su)}</div>
+        <div style="font-size:10.5px;color:#7D908A">غرام سكر</div></div>
+      <div style="flex:1"><div class="hero-num" style="font-size:23px;color:#C9922B">${Math.round(t.c)}</div>
+        <div style="font-size:10.5px;color:#7D908A">نشويات</div></div>
+    </div>
+    ${t.su>lim?`<div class="warn" style="margin-top:10px">هذا الكوب وحده يتجاوز حدّك اليومي من السكريات (${lim} غرامًا).</div>`
+      :`<div class="note" style="margin-top:8px">${Math.round(t.su/lim*100)}٪ من حدّك اليومي للسكريات.</div>`}
+  </div>`;
+}
+function saveMix(){
+  const t=mixTotals();
+  if(!t.k){ toast("اختر مكوّنًا واحدًا على الأقل"); return; }
+  addFood("عصير: "+t.names.join(" + "), Math.round(t.k),
+          Math.round(t.p*10)/10, Math.round(t.c), Math.round(t.su), Math.round(t.f*10)/10);
+  closeSheet();
 }
 
 /* بدء التشغيل */
