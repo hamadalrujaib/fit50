@@ -325,13 +325,13 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
               <div class="track"><div class="fill" id="fProt" style="width:0;background:#C9922B"></div></div>
             </div>
             <div class="bar">
-              <div class="bl"><span>ماء</span><b id="waterTxt">0 / 8 أكواب</b></div>
+              <div class="bl"><span>ماء</span><b id="waterTxt">0 / 2000 مل</b></div>
               <div class="track"><div class="fill" id="fWater" style="width:0;background:#1C6E8C"></div></div>
             </div>
           </div>
         </div>
         <div id="macroMini" style="margin-top:13px;border-top:1px solid var(--line);padding-top:12px"></div>
-        <button class="btn ghost" style="margin-top:12px" onclick="addWater()">أضف كوب ماء</button>
+        <div id="waterBtns" style="margin-top:12px"></div>
       </div>
     </div>
 
@@ -713,7 +713,7 @@ const APPTS = [];
    الحالة والتخزين
    ============================================================ */
 let S = {
-  target:1850, protTarget:115, waterTarget:8,
+  target:1850, protTarget:115, waterTarget:2000,
   workouts:[], weights:[], nutrition:{}, routine:{}, water:{},
   labs:[], supps:[], appts:[], badges:[], move:{}, suppLog:{}, body:[], sleep:{}
 };
@@ -726,7 +726,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 22;
+const APP_VER = 23;
 
 let STORE_OK = null;
 
@@ -739,10 +739,21 @@ function setStatus(state,msg){
     +`<span style="margin-right:auto;opacity:.6">إصدار ${APP_VER}</span>`;
 }
 
+function migrateWater(){
+  // النسخ السابقة كانت تعدّ أكوابًا — نحوّلها إلى مليلتر مرة واحدة
+  if(S.waterUnit==='ml') return;
+  const w=S.water||{};
+  Object.keys(w).forEach(d=>{ if(w[d]<=30) w[d]=Math.round(w[d]*200); });
+  if(!S.waterTarget || S.waterTarget<=30) S.waterTarget=2000;
+  S.waterUnit='ml';
+  try{ localStorage.setItem(K.main, JSON.stringify(S)); }catch(e){}
+}
+
 function load(){
   try{
     const raw = localStorage.getItem(K.main);
     if(raw) S = Object.assign(S, JSON.parse(raw));
+    migrateWater();
     localStorage.setItem(K.main+"-probe","1");
     localStorage.removeItem(K.main+"-probe");
     STORE_OK = true; setStatus('ok');
@@ -902,7 +913,7 @@ function render(){
 
   renderHeadStats(); renderMealPick(); renderDayNav();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros(); renderMacroMini(); renderKpis();
-  renderInfo(); renderBadges(); renderHeat(); renderMove(); renderSleep(); renderActSel();
+  renderInfo(); renderBadges(); renderHeat(); renderMove(); renderSleep(); renderWaterBtns(); renderActSel();
   renderLabs(); renderSupps(); renderAppts(); renderBody();
 }
 
@@ -969,7 +980,7 @@ function renderEnergy(){
   document.getElementById('kcalLeft').textContent = left>=0?Math.round(left):("+"+Math.abs(Math.round(left)));
   document.getElementById('kcalIn').textContent = Math.round(kcal);
   document.getElementById('protTxt').textContent = Math.round(prot)+" / "+S.protTarget+" غ";
-  document.getElementById('waterTxt').textContent = water+" / "+S.waterTarget+" أكواب";
+  document.getElementById('waterTxt').textContent = water+" / "+S.waterTarget+" مل";
   const pk=Math.min(1,kcal/S.target);
   document.getElementById('fKcal').style.width=(pk*100)+"%";
   document.getElementById('fKcal').style.background = kcal>S.target?"#9E2B36":"#0C3B32";
@@ -979,10 +990,6 @@ function renderEnergy(){
   arc.style.strokeDashoffset = 251.2*(1-pk);
   arc.setAttribute('stroke', kcal>S.target?"#9E2B36":"#0C3B32");
 }
-function addWater(){
-  const t=day(); S.water[t]=(S.water[t]||0)+1; save(); renderEnergy();
-}
-
 function renderKpis(){
   const w=S.weights.slice(-1)[0];
   document.getElementById('kWeight').textContent = w?w.kg:"—";
@@ -1503,7 +1510,7 @@ const BADGES = [
  {id:"iron",  i:"🏋️", n:"5 جلسات أثقال", f:()=>S.workouts.filter(w=>w.type&&w.type.indexOf("أثقال")>=0).length>=5},
  {id:"km25",  i:"🛣️", n:"25 كم",       f:()=>S.workouts.reduce((a,w)=>a+(w.km||0),0)>=25},
  {id:"prot",  i:"🥩", n:"هدف البروتين",f:()=>dayProt()>=S.protTarget},
- {id:"water", i:"💧", n:"8 أكواب",     f:()=>(S.water[today()]||0)>=S.waterTarget},
+ {id:"water", i:"💧", n:"2 لتر ماء",   f:()=>(S.water[today()]||0)>=S.waterTarget},
  {id:"weigh4",i:"⚖️", n:"4 أوزان",     f:()=>S.weights.length>=4},
  {id:"down2", i:"📉", n:"ناقص 2 كجم",  f:()=>S.weights.length>1 && (S.weights[0].kg-S.weights[S.weights.length-1].kg)>=2},
  {id:"labs",  i:"🧪", n:"ملف مكتمل",   f:()=>S.labs.length>=5},
@@ -2527,7 +2534,7 @@ function backToToday(){ VIEW=null; renderDay(); }
 function renderDay(){
   renderDayNav();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros();
-  renderMacroMini(); renderMove(); renderSleep(); renderSupps(); renderMealPick();
+  renderMacroMini(); renderMove(); renderSleep(); renderSupps(); renderMealPick(); renderWaterBtns();
 }
 
 function renderDayNav(){
@@ -2948,6 +2955,44 @@ function saveMix(){
   addFood("عصير: "+t.names.join(" + "), Math.round(t.k),
           Math.round(t.p*10)/10, Math.round(t.c), Math.round(t.su), Math.round(t.f*10)/10);
   closeSheet();
+}
+
+
+/* ============================================================
+   الماء — بالمليلتر
+   ============================================================ */
+const WATER_BTN=[
+ {ml:200, n:"كوب",     i:"🥛"},
+ {ml:330, n:"زجاجة",   i:"🍾"},
+ {ml:500, n:"قارورة",  i:"💧"},
+ {ml:750, n:"كبيرة",   i:"🚰"}
+];
+
+function renderWaterBtns(){
+  const el=document.getElementById('waterBtns'); if(!el) return;
+  const t=day(); const cur=S.water[t]||0;
+  el.innerHTML=`<div style="display:flex;gap:6px">
+    ${WATER_BTN.map(b=>`<button onclick="addWater(${b.ml})"
+      style="flex:1;background:#EAF3F7;border:1px solid #CFE3EC;border-radius:11px;
+        padding:9px 3px;color:#1C6E8C;font-size:11.5px;font-weight:700;line-height:1.5">
+      <div style="font-size:15px">${b.i}</div>${b.n}<br><span style="font-size:10px;opacity:.75">${b.ml}</span></button>`).join('')}
+  </div>
+  ${cur?`<button onclick="undoWater()" style="width:100%;margin-top:7px;font-size:11.5px;
+    color:var(--mute);padding:6px">↶ تراجع عن آخر إضافة</button>`:''}`;
+}
+
+function addWater(ml){
+  const t=day();
+  S.water[t]=(S.water[t]||0)+(ml||200);
+  S.waterLast=S.waterLast||{}; S.waterLast[t]=ml||200;
+  save(); renderEnergy(); renderWaterBtns(); renderBadges();
+}
+
+function undoWater(){
+  const t=day();
+  const last=(S.waterLast&&S.waterLast[t])||200;
+  S.water[t]=Math.max(0,(S.water[t]||0)-last);
+  save(); renderEnergy(); renderWaterBtns();
 }
 
 /* بدء التشغيل */
