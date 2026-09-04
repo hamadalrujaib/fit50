@@ -746,7 +746,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 26;
+const APP_VER = 27;
 
 let STORE_OK = null;
 
@@ -760,12 +760,16 @@ function setStatus(state,msg){
 }
 
 function migrateWater(){
-  // النسخ السابقة كانت تعدّ أكوابًا — نحوّلها إلى مليلتر مرة واحدة
-  if(S.waterUnit==='ml') return;
-  const w=S.water||{};
-  Object.keys(w).forEach(d=>{ if(w[d]<=30) w[d]=Math.round(w[d]*200); });
+  // 1) تصحيح الهدف — يعمل دائمًا، حتى بعد استيراد ملف قديم
   if(!S.waterTarget || S.waterTarget<=30) S.waterTarget=2000;
-  S.waterUnit='ml';
+  if(!S.target || S.target<200) S.target=1850;
+  if(!S.protTarget || S.protTarget<20) S.protTarget=115;
+  // 2) تحويل الأكواب إلى مليلتر — مرة واحدة فقط
+  if(S.waterUnit!=='ml'){
+    const w=S.water||{};
+    Object.keys(w).forEach(d=>{ if(w[d]<=30) w[d]=Math.round(w[d]*200); });
+    S.waterUnit='ml';
+  }
   try{ localStorage.setItem(K.main, JSON.stringify(S)); }catch(e){}
 }
 
@@ -861,7 +865,7 @@ function backupRestore(){
   try{
     const o=JSON.parse(document.getElementById('bkIn').value.trim());
     if(typeof o!=='object'||!o) throw 0;
-    S=Object.assign(S,o); save();
+    S=Object.assign(S,o); migrateWater(); save();
     closeSheet(); render(); toast("تم الاستيراد");
   }catch(e){ toast("النص ناقص — انسخه من { حتى } كاملًا"); }
 }
