@@ -321,11 +321,11 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
               <div class="track"><div class="fill" id="fKcal" style="width:0;background:#0C3B32"></div></div>
             </div>
             <div class="bar">
-              <div class="bl"><span>بروتين</span><b id="protTxt">0 / 115 غ</b></div>
+              <div class="bl"><span>بروتين</span><b id="protTxt">0 من 115 غ</b></div>
               <div class="track"><div class="fill" id="fProt" style="width:0;background:#C9922B"></div></div>
             </div>
             <div class="bar">
-              <div class="bl"><span>ماء</span><b id="waterTxt">0 / 2000 مل</b></div>
+              <div class="bl"><span>ماء</span><b id="waterTxt">0 من 2,000 مل</b></div>
               <div class="track"><div class="fill" id="fWater" style="width:0;background:#1C6E8C"></div></div>
             </div>
           </div>
@@ -353,6 +353,7 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
     <div class="sec anim">
       <h2>لمحة عامة</h2>
       <div id="infoBox"></div>
+      <div id="weekBox" style="margin-top:9px"></div>
     </div>
 
     <div class="sec anim">
@@ -370,7 +371,7 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
       <div class="kpis">
         <div class="kpi"><b id="kWeight">—</b><span>الوزن كجم</span></div>
         <div class="kpi"><b id="kRec">—</b><span>نبض التعافي</span></div>
-        <div class="kpi"><b id="kWeek">—</b><span>دقائق الأسبوع</span></div>
+        <div class="kpi"><b id="kWeek">—</b><span>دقائق آخر 7 أيام</span></div>
       </div>
     </div>
 
@@ -438,7 +439,8 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
       <label class="f">ابحث عن طعام</label>
       <input class="in" id="fq" placeholder="مثال: دجاج، أرز، لبن" oninput="searchFood()">
       <div class="fres" id="fres"></div>
-      <button class="btn ghost" onclick="openCustom()">أضف صنفًا غير موجود</button>
+      <button class="btn ghost" onclick="openCustom()">➕ أضف صنفًا غير موجود</button>
+      <div id="myFoodsNote" class="note"></div>
       <button class="btn g" onclick="openCam()">📷 صوّر وجبتك وقدّر سعراتها</button>
       <button class="btn ghost" onclick="openMix()">🥤 احسب عصيرك بمكوّناته</button>
       <input type="file" id="camIn" accept="image/*" capture="environment"
@@ -579,12 +581,12 @@ const PLAN = {
   4:{n:"الخميس",t:"أثقال — الجزء السفلي + مشي متدرّج",d:"45 دقيقة",c:"#2F7A3E",i:"🦵",
      s:["ضغط الأرجل","ديدليفت روماني — وزن خفيف","لانجز بالدمبل","مثنية الساق","رفع السمانة",
         "3 مجموعات × 12 تكرارًا","اختم بـ12 دقيقة مشي مع رفع الميل 1٪ كل 3 دقائق"]},
-  5:{n:"الجمعة",t:"راحة",d:"—",c:"#5D6F69",i:"🌿",s:["اختياري: مشي خفيف خارجي 20–30 دقيقة بدون قياس"]},
-  6:{n:"السبت",t:"راحة",d:"—",c:"#5D6F69",i:"🌿",s:["اختياري: مشي خفيف خارجي 20–30 دقيقة بدون قياس"]}
+  5:{n:"الجمعة",t:"راحة",d:"اختياري",c:"#5D6F69",i:"🌿",s:["اختياري: مشي خفيف خارجي 20–30 دقيقة بدون قياس"]},
+  6:{n:"السبت",t:"راحة",d:"اختياري",c:"#5D6F69",i:"🌿",s:["اختياري: مشي خفيف خارجي 20–30 دقيقة بدون قياس"]}
 };
 
 const ROUTINE = [
-  {id:"b12",  t:"إبرة B12", s:"حسب جدول الطبيب"},
+  {id:"b12",  t:"إبرة B12", s:"أسبوعية كل اثنين حتى 14 سبتمبر · ثم شهرية"},
   {id:"supp", t:"المكمّلات", s:"", link:true},
   {id:"shl",  t:"تمرين الكتف", s:"تدوير خارجي بحبل مطاطي · 15 تكرارًا × مجموعتين"},
   {id:"train",t:"جلسة اليوم", s:"حسب الجدول"},
@@ -741,7 +743,7 @@ const APPTS = [];
 let S = {
   target:1850, protTarget:115, waterTarget:2000,
   workouts:[], weights:[], nutrition:{}, routine:{}, water:{},
-  labs:[], supps:[], appts:[], badges:[], move:{}, suppLog:{}, body:[], sleep:{}
+  labs:[], supps:[], appts:[], badges:[], move:{}, suppLog:{}, body:[], sleep:{}, myFoods:[]
 };
 function ymd(d){
   const p=n=>String(n).padStart(2,'0');
@@ -752,7 +754,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 33;
+const APP_VER = 36;
 
 let STORE_OK = null;
 
@@ -939,13 +941,13 @@ function render(){
     `<div class="quote">${sceneSVG()}
      <div style="position:relative">
        <div class="qm">"</div><div class="qt">${q[0]}</div>
-       <div class="qa">${q[1]}</div>
+       ${q[1]&&q[1]!=='—'?`<div class="qa">${q[1]}</div>`:''}
        ${st>1?`<div class="streak">🔥 ${st} أيام متتالية</div>`:''}
      </div></div>`;
 
   renderHeadStats(); renderMealPick(); renderDayNav();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros(); renderMacroMini(); renderKpis();
-  renderInfo(); renderBadges(); renderHeat(); renderMove(); renderSleep(); renderWaterBtns(); renderFuel(); renderActSel();
+  renderInfo(); renderWeekBox(); renderBadges(); renderHeat(); renderMove(); renderSleep(); renderWaterBtns(); renderFuel(); renderMyFoodsNote(); renderActSel();
   renderLabs(); renderSupps(); renderAppts(); renderBody();
 }
 
@@ -1011,8 +1013,8 @@ function renderEnergy(){
   const left=S.target-kcal;
   document.getElementById('kcalLeft').textContent = left>=0?Math.round(left):("+"+Math.abs(Math.round(left)));
   document.getElementById('kcalIn').textContent = Math.round(kcal);
-  document.getElementById('protTxt').textContent = Math.round(prot)+" / "+S.protTarget+" غ";
-  document.getElementById('waterTxt').textContent = water+" / "+S.waterTarget+" مل";
+  document.getElementById('protTxt').textContent = Math.round(prot)+" من "+S.protTarget+" غ";
+  document.getElementById('waterTxt').textContent = water.toLocaleString('en')+" من "+S.waterTarget.toLocaleString('en')+" مل";
   const pk=Math.min(1,kcal/S.target);
   document.getElementById('fKcal').style.width=(pk*100)+"%";
   document.getElementById('fKcal').style.background = kcal>S.target?"#9E2B36":"#0C3B32";
@@ -1026,10 +1028,12 @@ function renderKpis(){
   const w=S.weights.slice(-1)[0];
   document.getElementById('kWeight').textContent = w?w.kg:"—";
   const rw=[...S.workouts].reverse().find(x=>x.max&&x.rec);
-  document.getElementById('kRec').textContent = rw?("-"+(rw.max-rw.rec)):"—";
+  const kr=document.getElementById('kRec');
+  if(rw){ kr.textContent="-"+(rw.max-rw.rec); kr.style.fontSize=""; }
+  else { kr.innerHTML='<span style="font-size:12px;color:#9AACA6;font-weight:400">لم يُقس بعد</span>'; }
   const wk=Date.now()-6*864e5;
   const mins=S.workouts.filter(x=>new Date(x.date).getTime()>=wk).reduce((a,x)=>a+(x.min||0),0);
-  document.getElementById('kWeek').textContent = mins||"—";
+  document.getElementById('kWeek').textContent = mins?Math.round(mins):"—";
 }
 
 /* ============================================================
@@ -1064,7 +1068,7 @@ function saveWorkout(){
   chosen=[]; renderActSel();
   ['wAvg','wMax','wRec','wNote'].forEach(i=>{const e=document.getElementById(i); if(e)e.value='';});
   toast("تم حفظ الجلسة");
-  showCompare(w,prev); renderKpis(); renderInfo(); renderBadges(); renderHeat(); renderHeadStats();
+  showCompare(w,prev); renderKpis(); renderInfo(); renderWeekBox(); renderBadges(); renderHeat(); renderHeadStats();
   const t=today(); S.routine[t]=S.routine[t]||{}; S.routine[t].train=true; save(); renderRoutine();
 }
 
@@ -1143,7 +1147,7 @@ function renderLog(){
   if(!S.workouts.length){ el.innerHTML=`<div class="card"><div class="empty">لا توجد جلسات بعد. سجّل أول جلسة من التبويب الأول.</div></div>`; return; }
   el.innerHTML=`<div class="card">`+[...S.workouts].reverse().map((w,i)=>{
     const idx=S.workouts.length-1-i;
-    const bits=[w.min+" د"];
+    const bits=[Math.round(w.min)+" د"];
     if(w.km) bits.push(w.km+" كم");
     if(w.spd) bits.push(w.spd+" كم/س");
     if(w.jog) bits.push("هرولة "+w.jog+" د");
@@ -1162,6 +1166,13 @@ function delW(i){ S.workouts.splice(i,1); save(); renderLog(); renderKpis(); }
 /* ============================================================
    التغذية
    ============================================================ */
+function renderMyFoodsNote(){
+  const el=document.getElementById('myFoodsNote'); if(!el) return;
+  const n=(S.myFoods||[]).length;
+  el.innerHTML = n ? `لديك <b>${n}</b> صنفًا محفوظًا في أصنافك — تظهر أول البحث بوسم «صنفي».`
+                   : 'الأصناف التي تضيفها تُحفظ تلقائيًا وتظهر في البحث لاحقًا.';
+}
+
 function renderMealPick(){
   const el=document.getElementById('mealPick'); if(!el) return;
   if(!pickMeal) pickMeal=mealByHour();
@@ -1174,20 +1185,24 @@ function searchFood(){
   const q=document.getElementById('fq').value.trim();
   const box=document.getElementById('fres');
   if(!q){ box.innerHTML=''; return; }
-  const r=FOODS.filter(f=>f[0].includes(q)).slice(0,14);
+  const mine=(S.myFoods||[]).filter(f=>f[0].includes(q));
+  const r=mine.concat(FOODS.filter(f=>f[0].includes(q))).slice(0,16);
   if(!r.length){ box.innerHTML=`<div style="padding:14px;font-size:13px;color:#7D908A">لا نتائج — استخدم زر إضافة صنف.</div>`; return; }
-  box.innerHTML=r.map(f=>
-    `<div class="fitem"><div class="fn">${f[0]}
+  box.innerHTML=r.map((f,ri)=>{
+    const own=(S.myFoods||[]).some(x=>x[0]===f[0]);
+    return `<div class="fitem"><div class="fn">${own?'<span style="font-size:9.5px;color:#C9922B;font-weight:700">صنفي</span> ':''}${f[0]}
        <div style="font-size:10.5px;color:#9AACA6;margin-top:1px">نشويات ${f[3]} · سكر ${f[4]} · دهون ${f[5]}</div></div>
      <div class="fk">${f[1]} سعرة · بروتين ${f[2]}</div>
-     <button class="add" onclick="qty('${f[0].replace(/'/g,"")}',${f[1]},${f[2]},${f[3]},${f[4]},${f[5]},${f[6]!==undefined?f[6]:0})">+</button></div>`).join('');
+     <button class="add" onclick="qty('${f[0].replace(/'/g,"")}',${f[1]},${f[2]},${f[3]},${f[4]},${f[5]},${f[6]!==undefined?f[6]:0})">+</button>
+     ${own?`<button onclick="delMyFood('${f[0].replace(/'/g,"")}')" style="color:#C77;font-size:15px;padding:0 3px">×</button>`:''}
+     </div>`;}).join('');
 }
 function addFood(n,k,p,c,su,f,a){
   const t=day();
   const sua = Math.round((su||0)*(a===undefined?addFrac(n):a)*10)/10;
   S.nutrition[t]=S.nutrition[t]||[];
   S.nutrition[t].push({n:n,k:k,p:p,c:c||0,su:su||0,f:f||0,sua:sua,m:pickMeal||mealByHour()});
-  save(); renderEnergy(); renderMeals(); renderBadges(); renderInfo(); renderMacros(); renderMealPick(); renderMacroMini();
+  save(); renderEnergy(); renderMeals(); renderBadges(); renderInfo(); renderMacros(); renderMealPick(); renderMacroMini(); renderMyFoodsNote();
   toast("أُضيف: "+n);
 }
 function renderMeals(){
@@ -1253,6 +1268,9 @@ function openCustom(){
       </div>
       <label class="f">كم ٪ من السكر مضاف؟ (0 للفاكهة واللبن · 100 للحلويات)</label>
       <input class="in" id="cA" type="number" inputmode="numeric" placeholder="0">
+      <label style="display:flex;align-items:center;gap:9px;margin-top:13px;font-size:13px;color:var(--ink2)">
+        <input type="checkbox" id="cKeep" checked style="width:20px;height:20px;accent-color:#0C3B32">
+        احفظه في أصنافي ليظهر في البحث لاحقًا</label>
       <button class="btn" onclick="saveCustom()">أضف</button>
       <button class="btn ghost" onclick="closeSheet()">إلغاء</button>
     </div></div>`;
@@ -1263,7 +1281,28 @@ function saveCustom(){
   const p=parseFloat(document.getElementById('cP').value)||0;
   if(!n||!k){ toast("أدخل الاسم والسعرات"); return; }
   const num=id=>parseFloat(document.getElementById(id).value)||0;
-  addFood(n,k,p,num('cC'),num('cSu'),num('cF'),num('cA')/100); closeSheet();
+  const c=num('cC'), su=num('cSu'), f=num('cF'), a=num('cA')/100;
+  const keep=document.getElementById('cKeep');
+  if(!keep || keep.checked){
+    S.myFoods=S.myFoods||[];
+    const i=S.myFoods.findIndex(x=>x[0]===n);
+    const row=[n,k,p,c,su,f,a];
+    if(i>=0) S.myFoods[i]=row; else S.myFoods.unshift(row);
+    if(S.myFoods.length>120) S.myFoods.pop();
+    save();
+  }
+  addFood(n,k,p,c,su,f,a); closeSheet();
+}
+
+function delMyFood(n){
+  S.myFoods=(S.myFoods||[]).filter(x=>x[0]!==n);
+  save(); searchFood(); toast("حُذف من أصنافك");
+}
+
+function addFrac2(n){
+  const m=(S.myFoods||[]).find(x=>x[0]===n||n.indexOf(x[0])===0);
+  if(m && m[6]!==undefined) return m[6];
+  return null;
 }
 function closeSheet(){ document.getElementById('sheet').innerHTML=''; }
 
@@ -1632,13 +1671,13 @@ function renderInfo(){
 
   el.innerHTML=`<div class="info">
     <div class="ic" style="background:linear-gradient(150deg,#175E4E,#0C3B32)">
-      <div class="il">مجموع المسافة</div><div class="iv">${totKm.toFixed(1)}</div><div class="iu">كيلومتر</div>
+      <div class="il">مجموع المسافة</div><div class="iv">${totKm.toFixed(1)}</div><div class="iu">كيلومتر · منذ البداية</div>
       <div class="ix">🛣️</div></div>
     <div class="ic" style="background:linear-gradient(150deg,#B4531F,#8A3D14)">
-      <div class="il">دقائق التمرين</div><div class="iv">${totMin}</div><div class="iu">دقيقة</div>
+      <div class="il">إجمالي الدقائق</div><div class="iv">${Math.round(totMin)}</div><div class="iu">دقيقة · منذ البداية</div>
       <div class="ix">⏱️</div></div>
     <div class="ic" style="background:linear-gradient(150deg,#1C6E8C,#12506A)">
-      <div class="il">سعرات محروقة</div><div class="iv">${totKcal}</div><div class="iu">سعرة</div>
+      <div class="il">سعرات محروقة</div><div class="iv">${Math.round(totKcal)}</div><div class="iu">سعرة · تقديرية</div>
       <div class="ix">🔥</div></div>
     <div class="ic" style="background:linear-gradient(150deg,#C9922B,#9A6D15)">
       <div class="il">أيام متتالية</div><div class="iv">${st}</div><div class="iu">يوم</div>
@@ -1668,7 +1707,7 @@ function renderHeat(){
     mset.add(months[d.getMonth()]);
     cells+=`<div class="hc" style="background:${bgs[lvl]};color:${lvl>2?'#fff':'#8AA096'};
       ${isToday?'outline:2px solid #C9922B;outline-offset:1px;font-weight:700':''}
-      ${first?'box-shadow:inset 0 0 0 1px #C9922B55':''}">${d.getDate()}</div>`;
+      ${first&&!isToday?'box-shadow:inset 0 0 0 1.5px #C3D2CC':''}">${d.getDate()}</div>`;
     d.setDate(d.getDate()+1);
   }
   const span=[...mset].join(' – ');
@@ -1679,7 +1718,7 @@ function renderHeat(){
       <span><i style="background:#EDF2F0"></i>بلا تمرين</span>
       <span><i style="background:#8FCBB8"></i>خفيف</span>
       <span><i style="background:#175E4E"></i>قوي</span>
-      <span><i style="border:2px solid #C9922B;background:none"></i>اليوم</span></div>`;
+      <span><i style="border:2px solid #C9922B;background:none"></i>اليوم</span>\n      <span><i style="box-shadow:inset 0 0 0 1.5px #C3D2CC;background:#EDF2F0"></i>أول الشهر</span></div>`;
 }
 
 function renderDonut(){
@@ -1887,7 +1926,7 @@ function renderMove(){
     const done=v>=x.g;
     return `<div class="bar" style="margin-bottom:13px">
       <div class="bl"><span>${x.i} ${x.n}</span>
-        <b style="color:${done?'#2F8F6E':'inherit'}">${v.toLocaleString('en')}${x.u} / ${x.g.toLocaleString('en')}${x.u}</b></div>
+        <b style="color:${done?'#2F8F6E':'inherit'}">${v.toLocaleString('en')}${x.u} من ${x.g.toLocaleString('en')}${x.u}</b></div>
       <div class="track"><div class="fill" style="width:${pc}%;background:${done?'#2F8F6E':'#175E4E'}"></div></div>
     </div>`;
   }).join('') + `<button class="btn ghost" style="margin-top:4px" onclick="openMove()">سجّل قراءة الساعة</button>`;
@@ -1981,7 +2020,7 @@ function renderMacroMini(){
    + items.map(x=>{
       const v=Math.round(x.v*10)/10, over=x.n==="سكريات"&&v>x.t;
       return `<div class="bar" style="margin-bottom:8px">
-        <div class="bl"><span>${x.n}</span><b style="color:${over?'#9E2B36':'inherit'}">${v} / ${x.t} غ</b></div>
+        <div class="bl"><span>${x.n}</span><b style="color:${over?'#9E2B36':'inherit'}">${v} من ${x.t} غ</b></div>
         <div class="track"><div class="fill" style="width:${Math.min(100,x.t?v/x.t*100:0)}%;background:${x.c}"></div></div>
       </div>`;
      }).join('');
@@ -2021,7 +2060,7 @@ function renderMacros(){
     const over = m.sub ? v>t : false;
     return `<div class="bar" style="margin-bottom:11px">
       <div class="bl"><span>${m.n}${m.k==='sua'?' <span style="font-size:10px;color:#9AACA6">(الأهم للكبد)</span>':(m.sub?' <span style="font-size:10px;color:#9AACA6">(ضمن النشويات)</span>':'')}</span>
-        <b style="color:${over?'#9E2B36':'inherit'}">${v} / ${t} غ</b></div>
+        <b style="color:${over?'#9E2B36':'inherit'}">${v} من ${t} غ</b></div>
       <div class="track"><div class="fill" style="width:${Math.min(100,v/t*100)}%;background:${over?'#9E2B36':m.c}"></div></div>
     </div>`;
   }).join('');
@@ -2163,10 +2202,13 @@ function sceneSVG(){
 /* عدّاد النيكوتين اختياري — يُفعّل من شاشة صحتي */
 
 function commitPct(){
-  // نسبة الالتزام خلال آخر 28 يومًا (أيام التمرين المقررة: الأحد–الخميس)
+  // من أول يوم سجّلت فيه، بحد أقصى 28 يومًا — حتى لا يظهر رقم مضلل في البداية
   const done=new Set(S.workouts.map(w=>w.date));
+  if(!S.workouts.length) return 0;
+  const first=S.workouts.map(w=>w.date).sort()[0];
+  const span=Math.min(28, Math.max(7, Math.round((Date.now()-new Date(first+"T12:00:00").getTime())/864e5)+1));
   let planned=0, hit=0; const d=new Date();
-  for(let i=0;i<28;i++){
+  for(let i=0;i<span;i++){
     const k=ymd(d), dow=d.getDay();
     if(dow!==5 && dow!==6){ planned++; if(done.has(k)) hit++; }
     d.setDate(d.getDate()-1);
@@ -2200,10 +2242,10 @@ function renderHeadStats(){
   const fatLbl = fd===null ? "نسبة الدهون ٪" : "تغيّر الدهون ٪";
   const fatCol = fd===null ? "" : (fd<0?"style=\"color:#8FE0BC\"":(fd>0?"style=\"color:#F3A9A9\"":""));
   el.innerHTML=`<div class="hstats">
-    <div class="hs gold"><b>${pct}٪</b><span>التزام 4 أسابيع</span></div>
+    <div class="hs gold"><b>${pct}٪</b><span>الالتزام بالجدول</span></div>
     <div class="hs"><b>${aw}</b><span>أسابيع نشطة</span></div>
     <div class="hs"><b ${fatCol}>${fatTxt}</b><span>${fatLbl}</span></div>
-    <div class="hs"><b>${mins||0}</b><span>دقائق الأسبوع</span></div>
+    <div class="hs"><b>${Math.round(mins)||0}</b><span>دقائق 7 أيام</span></div>
   </div>`;
 }
 
@@ -2581,7 +2623,7 @@ function backToToday(){ VIEW=null; renderDay(); }
 function renderDay(){
   renderDayNav();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros();
-  renderMacroMini(); renderMove(); renderSleep(); renderSupps(); renderMealPick(); renderFuel(); renderWaterBtns();
+  renderMacroMini(); renderMove(); renderSleep(); renderSupps(); renderMealPick(); renderFuel(); renderMyFoodsNote(); renderWaterBtns();
 }
 
 function renderDayNav(){
@@ -2635,7 +2677,7 @@ function renderSleep(){
   el.innerHTML=`
     <div style="display:flex;gap:12px;text-align:center;margin-bottom:12px">
       <div style="flex:1"><div class="hero-num" style="font-size:23px;color:${q[1]}">${min2hm(total)}</div>
-        <div style="font-size:10.5px;color:#7D908A">المجموع — ${q[0]}</div></div>
+        <div style="font-size:10.5px;color:#7D908A">المجموع · ${q[0]}</div></div>
       ${sl.bed?`<div style="flex:1"><div class="hero-num" style="font-size:19px">${sl.bed}</div>
         <div style="font-size:10.5px;color:#7D908A">نمت</div></div>`:''}
       ${sl.wake?`<div style="flex:1"><div class="hero-num" style="font-size:19px">${sl.wake}</div>
@@ -3682,6 +3724,7 @@ function renderFuel(){
 const ADD_KEYS=["شوكولاتة","آيس كريم","حلويات","كيك","عسل","غازي","شويبس","جينجر","كرك","بسبوسة",
  "شاي بسكر","شاي بحليب","سكر","كراميل","مترو","جرانولا","عصير","سموذي","معجنات","برجر","شاورما","بيتزا"];
 function addFrac(n){
+  const mn=addFrac2(n); if(mn!==null) return mn;
   const f=FOODS.find(x=>x[0]===n||n.indexOf(x[0])===0);
   if(f && f[6]!==undefined) return f[6];
   for(const k of ADD_KEYS) if(n.indexOf(k)>=0) return 1;
@@ -3690,6 +3733,28 @@ function addFrac(n){
 function mealSugarAdded(x){
   if(x.sua!==undefined) return x.sua;
   return Math.round((x.su||0)*addFrac(x.n)*10)/10;   // البيانات القديمة تُصنَّف تلقائيًا
+}
+
+
+function renderWeekBox(){
+  const el=document.getElementById('weekBox'); if(!el) return;
+  const cur=trainStats(7,0);
+  const nu=nutriAvg(7,0);
+  const pct=commitPct();
+  const rows=[];
+  rows.push(['دقائق آخر 7 أيام', Math.round(cur.mins), 150, 'دقيقة', cur.mins>=150]);
+  if(nu){
+    rows.push(['متوسط البروتين', Math.round(nu.p), S.protTarget, 'غ', nu.p>=S.protTarget*0.9]);
+    rows.push(['متوسط السكر المضاف', Math.round(nu.sua), Math.round(S.target*0.05/4), 'غ', nu.sua<=S.target*0.05/4]);
+  }
+  el.innerHTML=`<div class="card">
+    <div style="font-size:11.5px;color:var(--mute);margin-bottom:9px">آخر سبعة أيام · الالتزام ${pct}٪</div>
+    ${rows.map(r=>`<div class="bar" style="margin-bottom:10px">
+      <div class="bl"><span>${r[0]}</span>
+        <b style="color:${r[4]?'#2F8F6E':'#B4531F'}">${r[1]} من ${r[2]} ${r[3]}</b></div>
+      <div class="track"><div class="fill" style="width:${Math.min(100,r[1]/r[2]*100)}%;
+        background:${r[4]?'#2F8F6E':'#C9922B'}"></div></div></div>`).join('')}
+  </div>`;
 }
 
 /* بدء التشغيل */
