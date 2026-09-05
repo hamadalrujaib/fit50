@@ -746,7 +746,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 27;
+const APP_VER = 28;
 
 let STORE_OK = null;
 
@@ -921,7 +921,9 @@ function render(){
        <div class="pd">${p.d}</div>
      </div>
      <div class="card" style="margin-top:10px"><div class="steps">
-       ${p.s.map((x,i)=>`<div class="step"><i>${String(i+1).padStart(2,'0')}</i><span>${x}</span></div>`).join('')}
+       ${p.s.map((x,i)=>{const k=exKey(x);
+         return `<div class="step" ${k?`onclick="openEx('${x.replace(/'/g,"\\'")}')" style="cursor:pointer"`:''}>
+           <i>${String(i+1).padStart(2,'0')}</i><span>${x}</span>${k?'<span style="color:#C3CFCA;font-size:12px">▸</span>':''}</div>`;}).join('')}
      </div></div>`;
 
   const qi = Math.floor(d.getTime()/864e5) % QUOTES.length;
@@ -1116,7 +1118,9 @@ function renderPlan(){
         <span style="font-size:11.5px;font-weight:700;color:#fff;background:${p.c};padding:5px 11px;border-radius:20px">${p.d}</span>
       </div>
       <div style="padding:11px 14px" class="steps">
-        ${p.s.map(x=>`<div class="step"><i>·</i><span>${x}</span></div>`).join('')}
+        ${p.s.map(x=>{const k=exKey(x);
+          return `<div class="step" ${k?`onclick="openEx('${x.replace(/'/g,"\\'")}')" style="cursor:pointer"`:''}>
+            <i>${k?'▸':'·'}</i><span>${x}</span>${k?'<span style="color:#C3CFCA;font-size:13px">تفاصيل</span>':''}</div>`;}).join('')}
       </div></div>`;
   }).join('');
 }
@@ -3017,6 +3021,322 @@ function undoWater(){
   const last=(S.waterLast&&S.waterLast[t])||200;
   S.water[t]=Math.max(0,(S.water[t]||0)-last);
   save(); renderEnergy(); renderWaterBtns();
+}
+
+
+/* ============================================================
+   دليل التمارين — رسوم وخطوات
+   ============================================================ */
+function fig(parts){
+  return `<svg viewBox="0 0 200 130" style="width:100%;height:auto;display:block">
+    <rect width="200" height="130" fill="#F2F6F4" rx="10"/>
+    <line x1="12" y1="118" x2="188" y2="118" stroke="#C8D5D0" stroke-width="2"/>
+    ${parts}</svg>`;
+}
+const G='stroke="#0C3B32" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+const G2='stroke="#B4531F" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+const HEAD=(x,y,c)=>`<circle cx="${x}" cy="${y}" r="9" fill="${c||'#0C3B32'}"/>`;
+const ARROW=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#C9922B" stroke-width="2.5"
+  stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
+const DEFS=`<defs><marker id="ah" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto"
+  markerUnits="strokeWidth"><path d="M0 0 L4 2 L0 4 z" fill="#C9922B"/></marker></defs>`;
+
+const EXER = {
+"سكوات":{
+  m:"الفخذان · المؤخرة · أسفل الظهر",
+  svg:fig(DEFS+
+    HEAD(52,28)+`<path d="M52 37 L52 68 M52 68 L44 96 L44 118 M52 68 L60 96 L60 118 M52 46 L38 60 M52 46 L66 60" ${G}/>`+
+    HEAD(140,44)+`<path d="M140 53 L140 78 M140 78 L126 92 L126 118 M140 78 L154 92 L154 118 M140 60 L126 74 M140 60 L154 74" ${G2}/>`+
+    ARROW(84,52,110,72)),
+  s:["قف والقدمان بعرض الكتفين، أصابع القدم للخارج قليلًا",
+     "ادفع مؤخرتك للخلف كأنك تجلس على كرسي",
+     "انزل حتى يوازي الفخذ الأرض — أو أقل إن كان الركبة تؤلم",
+     "ابقِ صدرك مرفوعًا وظهرك مستقيمًا",
+     "ادفع بكعبيك للصعود واعصر المؤخرة في الأعلى"],
+  e:["الركبة تتجاوز أصابع القدم كثيرًا","تقوّس أسفل الظهر عند النزول","رفع الكعبين عن الأرض"],
+  y:"squat proper form"
+},
+"ضغط صدر بالدمبل — قبضة محايدة":{
+  m:"الصدر · الترايسبس · الكتف الأمامي",
+  svg:fig(DEFS+
+    `<rect x="34" y="86" width="134" height="9" rx="4" fill="#C8D5D0"/>`+
+    HEAD(48,74)+`<path d="M57 78 L120 78" ${G}/>`+
+    `<path d="M74 78 L74 52 M104 78 L104 52" ${G}/>`+
+    `<rect x="64" y="44" width="20" height="9" rx="4" fill="#0C3B32"/>`+
+    `<rect x="94" y="44" width="20" height="9" rx="4" fill="#0C3B32"/>`+
+    ARROW(89,40,89,20)),
+  s:["استلقِ على المقعد، القدمان ثابتتان على الأرض",
+     "امسك الدمبلين وراحتا اليدين متقابلتان — هذه القبضة المحايدة",
+     "أنزل الدمبلين إلى جانبَي صدرك ببطء",
+     "ادفع لأعلى مع الزفير حتى يستقيم الذراعان بلا قفل",
+     "ابقِ المرفقين قريبين من الجسم لا مفرودين للجانبين"],
+  e:["فتح المرفقين 90 درجة — يضغط الكتف","النزول أعمق من مستوى الصدر","حبس النفس أثناء الدفع"],
+  y:"neutral grip dumbbell press",
+  sh:"القبضة المحايدة اختيرت لك تحديدًا لأنها تقلل الضغط على وتر فوق الشوكة."
+},
+"تجديف بالكيبل":{
+  m:"الظهر العريض · منتصف الظهر · البايسبس",
+  svg:fig(DEFS+
+    `<rect x="164" y="30" width="10" height="88" fill="#C8D5D0"/>`+
+    HEAD(64,52)+`<path d="M64 61 L64 92 M64 92 L82 108 L104 108 M64 68 L110 74" ${G}/>`+
+    `<path d="M110 74 L164 66" stroke="#7D908A" stroke-width="2.5"/>`+
+    `<rect x="104" y="68" width="14" height="12" rx="3" fill="#0C3B32"/>`+
+    ARROW(128,86,96,86)),
+  s:["اجلس وثبّت قدميك على المسند، الركبتان مثنيتان قليلًا",
+     "امسك المقبض وظهرك مستقيم وصدرك مرفوع",
+     "اسحب المقبض نحو بطنك مع ضم لوحَي الكتف",
+     "اثبت ثانية في النهاية ثم أرجع ببطء",
+     "لا تحرّك جذعك للأمام والخلف — الحركة من الذراعين والظهر"],
+  e:["تأرجح الجذع لاستخدام الزخم","تقويس الظهر للأمام","سحب المقبض إلى الصدر بدل البطن"],
+  y:"seated cable row form"
+},
+"جسر الورك":{
+  m:"المؤخرة · أوتار الركبة · عضلات الجذع",
+  svg:fig(DEFS+
+    HEAD(44,96)+`<path d="M53 96 L96 96 M96 96 L112 108 L112 118 M96 96 L112 84" stroke="#C8D5D0" stroke-width="4" fill="none" stroke-linecap="round"/>`+
+    HEAD(44,96)+`<path d="M53 94 L100 72 M100 72 L114 96 L114 118" ${G}/>`+
+    ARROW(80,66,80,48)),
+  s:["استلقِ على ظهرك، الركبتان مثنيتان والقدمان مسطحتان بعرض الحوض",
+     "قرّب كعبيك من مؤخرتك، واليدان على الجانبين",
+     "ادفع بكعبيك وارفع حوضك حتى يصير جسمك خطًا مستقيمًا من الركبة إلى الكتف",
+     "اعصر المؤخرة بقوة واثبت ثانيتين",
+     "انزل ببطء دون أن تلمس الأرض تمامًا"],
+  e:["الرفع بأسفل الظهر بدل المؤخرة","الدفع بأصابع القدم بدل الكعبين","التقوّس أعلى من الخط المستقيم"],
+  y:"hip bridge glute"
+},
+"بلانك":{
+  m:"عضلات الجذع كاملة · أسفل الظهر · الكتف",
+  svg:fig(DEFS+
+    HEAD(44,64)+`<path d="M53 66 L150 84 M60 68 L60 96 L74 96 M150 84 L156 118" ${G}/>`+
+    `<path d="M50 60 L156 78" stroke="#C9922B" stroke-width="2" stroke-dasharray="4 3"/>`),
+  s:["استند على ساعديك وأصابع قدميك",
+     "المرفقان تحت الكتفين مباشرة",
+     "اجعل جسمك خطًا مستقيمًا من الرأس إلى الكعب",
+     "اشدّ بطنك ومؤخرتك، وتنفّس بانتظام",
+     "ابدأ بـ30 ثانية وزد تدريجيًا"],
+  e:["رفع المؤخرة لأعلى","هبوط الحوض وتقوّس الظهر","حبس النفس"],
+  y:"plank correct form"
+}
+};
+Object.assign(EXER, {
+"سحب أرضي":{
+  m:"الظهر العريض · منتصف الظهر · البايسبس",
+  svg:fig(DEFS+
+    `<rect x="164" y="30" width="10" height="88" fill="#C8D5D0"/>`+
+    HEAD(64,52)+`<path d="M64 61 L64 92 M64 92 L82 108 L104 108 M64 68 L112 72" ${G}/>`+
+    `<path d="M112 72 L164 62" stroke="#7D908A" stroke-width="2.5"/>`+
+    ARROW(130,84,98,84)),
+  s:["اجلس مستقيمًا وثبّت قدميك على المسند",
+     "امسك المقبض والذراعان ممدودتان",
+     "اسحب نحو أسفل الصدر مع ضم لوحَي الكتف",
+     "أرجع ببطء مع مقاومة الوزن"],
+  e:["استخدام الزخم","تقويس الظهر","رفع الكتفين نحو الأذنين"],
+  y:"seated row exercise"
+},
+"ضغط صدر مسطح — قبضة ضيقة":{
+  m:"الصدر · الترايسبس",
+  svg:fig(DEFS+
+    `<rect x="34" y="86" width="134" height="9" rx="4" fill="#C8D5D0"/>`+
+    HEAD(48,74)+`<path d="M57 78 L120 78 M82 78 L82 52 M96 78 L96 52" ${G}/>`+
+    `<rect x="72" y="44" width="36" height="8" rx="4" fill="#0C3B32"/>`+
+    ARROW(89,38,89,20)),
+  s:["استلقِ والقبضة أضيق من عرض الكتفين قليلًا",
+     "أنزل البار إلى وسط صدرك والمرفقان قريبان من الجسم",
+     "ادفع لأعلى مع الزفير",
+     "لا تقفل المرفقين تمامًا في الأعلى"],
+  e:["فتح المرفقين للجانبين","القبضة الضيقة جدًا تؤلم الرسغ","ارتداد البار عن الصدر"],
+  y:"close grip bench press",
+  sh:"القبضة الضيقة تحمي كتفك — لا توسّعها."
+},
+"رفرفة جانبية — حتى مستوى الكتف فقط":{
+  m:"الكتف الجانبي",
+  svg:fig(DEFS+
+    HEAD(100,32)+`<path d="M100 41 L100 84 M100 84 L90 118 M100 84 L110 118 M100 50 L64 62 M100 50 L136 62" ${G}/>`+
+    `<rect x="54" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
+    `<rect x="130" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
+    `<path d="M40 50 L160 50" stroke="#9E2B36" stroke-width="2" stroke-dasharray="5 3"/>`+
+    `<text x="100" y="44" font-size="9" fill="#9E2B36" text-anchor="middle">لا تتجاوز هذا الخط</text>`),
+  s:["قف والدمبلان بجانبك، مرفقان مثنيان قليلًا",
+     "ارفع ذراعيك للجانبين حتى مستوى الكتف فقط",
+     "توقّف عند الخط — لا ترفع أعلى",
+     "أنزل ببطء في ثانيتين"],
+  e:["الرفع فوق مستوى الكتف","استخدام الزخم بالجذع","وزن ثقيل يفسد الحركة"],
+  y:"lateral raise shoulder height",
+  sh:"هذا التمرين الأخطر على كتفك. الرفع فوق مستوى الكتف يضغط الوتر مباشرة — توقّف عند الخط دائمًا."
+},
+"بايسبس":{
+  m:"العضلة ذات الرأسين · الساعد",
+  svg:fig(DEFS+
+    HEAD(100,30)+`<path d="M100 39 L100 84 M100 84 L90 118 M100 84 L110 118 M100 50 L82 70 L96 60 M100 50 L118 70 L104 60" ${G}/>`+
+    `<rect x="86" y="54" width="28" height="8" rx="4" fill="#0C3B32"/>`+
+    ARROW(134,74,134,54)),
+  s:["قف والمرفقان ملتصقان بجذعك",
+     "ارفع الوزن بثني المرفق فقط",
+     "اعصر في الأعلى ثم أنزل ببطء",
+     "لا تحرّك المرفق للأمام أو الخلف"],
+  e:["تأرجح الجذع","تحريك المرفقين للأمام","النزول السريع بلا تحكّم"],
+  y:"dumbbell biceps curl"
+},
+"ترايسبس بالحبل":{
+  m:"العضلة ثلاثية الرؤوس",
+  svg:fig(DEFS+
+    `<rect x="150" y="20" width="10" height="98" fill="#C8D5D0"/>`+
+    HEAD(74,34)+`<path d="M74 43 L74 88 M74 88 L64 118 M74 88 L84 118 M74 54 L100 62 L106 84" ${G}/>`+
+    `<path d="M100 62 L150 34" stroke="#7D908A" stroke-width="2.5"/>`+
+    ARROW(122,80,122,100)),
+  s:["قف أمام الكيبل والحبل في يديك",
+     "ثبّت المرفقين بجانب جذعك تمامًا",
+     "ادفع الحبل لأسفل حتى يستقيم الذراعان",
+     "افتح طرفَي الحبل قليلًا في النهاية",
+     "أرجع ببطء دون تحريك المرفقين"],
+  e:["تحريك المرفقين للخلف","الانحناء بالجذع للدفع","وزن ثقيل يستدعي الكتف"],
+  y:"triceps rope pushdown"
+},
+"رفع أرجل":{
+  m:"أسفل البطن · عضلات الجذع",
+  svg:fig(DEFS+
+    HEAD(38,96)+`<path d="M47 96 L96 96" ${G}/>`+
+    `<path d="M96 96 L140 96" stroke="#C8D5D0" stroke-width="4" stroke-linecap="round"/>`+
+    `<path d="M96 96 L120 56" ${G2}/>`+
+    ARROW(136,84,136,58)),
+  s:["استلقِ على ظهرك واليدان تحت مؤخرتك للدعم",
+     "ارفع رجليك مستقيمتين حتى تصير عمودية",
+     "أنزل ببطء دون أن تلمس الأرض",
+     "ابقِ أسفل ظهرك ملتصقًا بالأرض طوال الحركة"],
+  e:["رفع أسفل الظهر عن الأرض","النزول السريع","ثني الركبتين كثيرًا"],
+  y:"lying leg raises"
+},
+"دراجة":{
+  m:"البطن المائل · أسفل البطن",
+  svg:fig(DEFS+
+    HEAD(46,86)+`<path d="M55 88 L100 92 M100 92 L128 74 M100 92 L124 108 M62 84 L88 70" ${G}/>`+
+    ARROW(140,86,116,96)),
+  s:["استلقِ واليدان خلف رأسك بلا شدّ للرقبة",
+     "ارفع كتفيك قليلًا عن الأرض",
+     "قرّب مرفقك الأيمن من ركبتك اليسرى مع مدّ الرجل الأخرى",
+     "بدّل الجانبين بحركة دراجة بطيئة ومتحكّمة"],
+  e:["شدّ الرقبة باليدين","السرعة على حساب الانقباض","عدم مدّ الرجل بالكامل"],
+  y:"bicycle crunch form"
+}
+});
+Object.assign(EXER, {
+"ضغط الأرجل":{
+  m:"الفخذان · المؤخرة",
+  svg:fig(DEFS+
+    `<rect x="28" y="70" width="52" height="42" rx="6" fill="#C8D5D0"/>`+
+    HEAD(48,62)+
+    `<path d="M80 92 L118 76 M118 76 L150 60" ${G}/>`+
+    `<rect x="140" y="34" width="14" height="52" rx="4" fill="#0C3B32"/>`+
+    ARROW(120,44,150,30)),
+  s:["اجلس وظهرك ملتصق بالمسند تمامًا",
+     "ضع قدميك بعرض الكتفين في منتصف اللوح",
+     "أنزل الوزن حتى تصير الركبة 90 درجة",
+     "ادفع بكعبيك دون قفل الركبتين في النهاية"],
+  e:["قفل الركبتين في الأعلى","النزول عميقًا حتى يرتفع الحوض","رفع الظهر عن المسند"],
+  y:"leg press machine form"
+},
+"ديدليفت روماني — وزن خفيف":{
+  m:"أوتار الركبة · المؤخرة · أسفل الظهر",
+  svg:fig(DEFS+
+    HEAD(58,26)+`<path d="M58 35 L58 74 M58 74 L54 118 M58 44 L58 78" ${G}/>`+
+    HEAD(134,44)+`<path d="M134 53 L112 76 M112 76 L110 118 M124 62 L124 92" ${G2}/>`+
+    `<rect x="112" y="88" width="26" height="7" rx="3" fill="#B4531F"/>`+
+    `<rect x="46" y="74" width="26" height="7" rx="3" fill="#0C3B32"/>`+
+    ARROW(88,50,104,66)),
+  s:["قف والبار أمام فخذيك، الركبتان مثنيتان قليلًا جدًا",
+     "ادفع مؤخرتك للخلف وأنزل البار بمحاذاة ساقيك",
+     "انزل حتى تشعر بشدّ في خلف الفخذ — لا أبعد",
+     "ابقِ ظهرك مستقيمًا تمامًا طوال الحركة",
+     "ارجع بدفع الحوض للأمام وعصر المؤخرة"],
+  e:["تقويس الظهر — أخطر خطأ في هذا التمرين","ثني الركبتين كثيرًا فيصير سكوات","إبعاد البار عن الساقين"],
+  y:"romanian deadlift form",
+  sh:"ابدأ بوزن خفيف جدًا حتى تتقن استقامة الظهر. هذا التمرين لا يُجرَّب بأوزان ثقيلة."
+},
+"لانجز بالدمبل":{
+  m:"الفخذان · المؤخرة · التوازن",
+  svg:fig(DEFS+
+    HEAD(96,26)+`<path d="M96 35 L96 70 M96 70 L70 96 L70 118 M96 70 L124 92 L136 118 M96 44 L78 62 M96 44 L114 62" ${G}/>`+
+    `<rect x="68" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
+    `<rect x="108" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
+    ARROW(150,74,150,98)),
+  s:["قف مستقيمًا والدمبلان بجانبك",
+     "اخطُ خطوة واسعة للأمام",
+     "أنزل حتى تقترب ركبتك الخلفية من الأرض",
+     "الركبة الأمامية فوق الكاحل لا متجاوزة له",
+     "ادفع بالكعب الأمامي للعودة، ثم بدّل الرجل"],
+  e:["الخطوة القصيرة تضغط الركبة","الميل بالجذع للأمام","لمس الأرض بالركبة الخلفية بقوة"],
+  y:"dumbbell lunges form"
+},
+"رفع السمانة":{
+  m:"عضلة الساق الخلفية",
+  svg:fig(DEFS+
+    HEAD(76,26)+`<path d="M76 35 L76 82 M76 82 L68 112 M76 82 L84 112" ${G}/>`+
+    `<path d="M60 112 L92 112" stroke="#0C3B32" stroke-width="4" stroke-linecap="round"/>`+
+    HEAD(138,18)+`<path d="M138 27 L138 74 M138 74 L130 106 M138 74 L146 106" ${G2}/>`+
+    `<path d="M132 106 L152 106" stroke="#B4531F" stroke-width="4" stroke-linecap="round"/>`+
+    ARROW(110,54,110,34)),
+  s:["قف مستقيمًا والدمبلان بجانبك",
+     "ارفع كعبيك عن الأرض حتى تقف على أطراف أصابعك",
+     "اعصر السمانة في الأعلى ثانية",
+     "أنزل ببطء تام حتى تشعر بشدّ"],
+  e:["الحركة السريعة بلا انقباض","الارتداد في الأسفل","ثني الركبتين"],
+  y:"standing calf raises"
+},
+"التدوير الخارجي بحبل مطاطي":{
+  m:"الكفة المدوّرة — تأهيل الكتف",
+  svg:fig(DEFS+
+    HEAD(70,34)+`<path d="M70 43 L70 90 M70 90 L62 118 M70 90 L78 118 M70 54 L92 66 L120 54" ${G}/>`+
+    `<path d="M120 54 L162 60" stroke="#7D908A" stroke-width="2.5"/>`+
+    `<rect x="88" y="60" width="10" height="12" rx="3" fill="#0C3B32"/>`+
+    ARROW(132,76,132,50)+
+    `<circle cx="92" cy="66" r="13" fill="none" stroke="#C9922B" stroke-width="2" stroke-dasharray="3 3"/>`),
+  s:["ثبّت الحبل بمستوى المرفق وقف بجانبه",
+     "المرفق ملتصق بجذعك وزاوية 90 درجة — لا يفارق الجسم أبدًا",
+     "أدر ساعدك للخارج بعيدًا عن بطنك",
+     "أرجع ببطء تام",
+     "15 تكرارًا × مجموعتين — يوميًا"],
+  e:["إبعاد المرفق عن الجسم","استخدام حبل شديد المقاومة","الحركة السريعة"],
+  y:"external rotation rotator cuff",
+  sh:"هذا أهم تمرين في برنامجك لكتفك. يقوّي العضلات المثبتة ويوسّع المسافة تحت الأخرم. لا تتجاوزه."
+}
+});
+
+/* عرض تفاصيل التمرين */
+function exKey(t){
+  if(EXER[t]) return t;
+  const keys=Object.keys(EXER);
+  let best=null;
+  for(const k of keys){
+    const a=k.split(" — ")[0].trim(), b=t.split(" — ")[0].trim();
+    if(a===b || t.indexOf(a)>=0 || k.indexOf(b)>=0){ if(!best||k.length>best.length) best=k; }
+  }
+  return best;
+}
+
+function openEx(t){
+  const k=exKey(t);
+  if(!k){ toast("لا يوجد شرح لهذا البند"); return; }
+  const x=EXER[k];
+  document.getElementById('sheet').innerHTML=
+  `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+     <h3>${esc(k)}</h3>
+     <div class="sub">${esc(x.m)}</div>
+     ${x.svg}
+     ${x.sh?`<div class="warn" style="margin-top:12px"><b>ملاحظة الكتف:</b> ${esc(x.sh)}</div>`:''}
+     <div style="margin-top:14px"><b style="font-size:13.5px;font-family:'Cairo',sans-serif">الخطوات</b>
+       ${x.s.map((st,i)=>`<div style="display:flex;gap:9px;font-size:12.5px;line-height:1.85;padding:4px 0;
+         border-bottom:1px dashed var(--line)">
+         <span style="color:#C9922B;font-weight:700;min-width:14px">${i+1}</span><span>${esc(st)}</span></div>`).join('')}
+     </div>
+     <div style="margin-top:14px"><b style="font-size:13.5px;color:#9E2B36;font-family:'Cairo',sans-serif">أخطاء شائعة</b>
+       ${x.e.map(er=>`<div style="display:flex;gap:9px;font-size:12.5px;line-height:1.85;padding:3px 0">
+         <span style="color:#C0463F">✕</span><span>${esc(er)}</span></div>`).join('')}
+     </div>
+     <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(x.y)}" target="_blank"
+        class="btn" style="text-decoration:none;text-align:center;display:block;background:#9E2B36">
+        ▶︎ شاهد فيديو للحركة</a>
+     <button class="btn ghost" onclick="closeSheet()">إغلاق</button>
+   </div></div>`;
 }
 
 /* بدء التشغيل */
