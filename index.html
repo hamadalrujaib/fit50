@@ -446,6 +446,11 @@ h1,h2,h3,.dname,.secttl,.zn,.iv,.pan-h,.mh,.rt b,.lv,.rest .rt{font-family:'Cair
     </div>
 
     <div class="sec" style="margin-top:16px">
+      <h2>تغذية التمرين</h2>
+      <div class="card" id="fuelCard"></div>
+    </div>
+
+    <div class="sec">
       <h2>تفصيل اليوم</h2>
       <div class="card" id="macros"></div>
     </div>
@@ -747,7 +752,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 31;
+const APP_VER = 32;
 
 let STORE_OK = null;
 
@@ -940,7 +945,7 @@ function render(){
 
   renderHeadStats(); renderMealPick(); renderDayNav();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros(); renderMacroMini(); renderKpis();
-  renderInfo(); renderBadges(); renderHeat(); renderMove(); renderSleep(); renderWaterBtns(); renderActSel();
+  renderInfo(); renderBadges(); renderHeat(); renderMove(); renderSleep(); renderWaterBtns(); renderFuel(); renderActSel();
   renderLabs(); renderSupps(); renderAppts(); renderBody();
 }
 
@@ -2571,7 +2576,7 @@ function backToToday(){ VIEW=null; renderDay(); }
 function renderDay(){
   renderDayNav();
   renderRoutine(); renderEnergy(); renderMeals(); renderMacros();
-  renderMacroMini(); renderMove(); renderSleep(); renderSupps(); renderMealPick(); renderWaterBtns();
+  renderMacroMini(); renderMove(); renderSleep(); renderSupps(); renderMealPick(); renderFuel(); renderWaterBtns();
 }
 
 function renderDayNav(){
@@ -3588,6 +3593,83 @@ function liftCompare(cur,prev){
   if(rows.length) h+=`<div style="font-size:12.5px;padding:5px 0;color:#7D908A">تغيّر الأوزان:</div>`
     +rows.map(r=>`<div style="font-size:13px;padding:2px 0">${r}</div>`).join('');
   return h;
+}
+
+
+/* ============================================================
+   تغذية التمرين — قبل وأثناء وبعد
+   ============================================================ */
+const FUEL={
+ lift:{ // أيام الأثقال
+  pre:{t:"قبل بـ60–90 دقيقة",
+    items:[["تمر (3 حبات) + قهوة سادة",63],["موزة + ملعقة زبدة فول سوداني",199],["شريحة توست أسمر + بيضة",158]],
+    note:"كربوهيدرات سريعة لطاقة الرفع. تجنّب الدهون الكثيرة — تبطئ الهضم وتثقل المعدة."},
+  during:{t:"أثناء الجلسة",
+    items:[["ماء 500 مل موزّعة على الجلسة",0]],
+    note:"لا تحتاج طعامًا في جلسة أقل من ساعة. الماء فقط."},
+  post:{t:"خلال ساعة بعد الانتهاء",
+    items:[["زبادي يوناني + توتيات",156],["علبة تونة بالماء + شريحة توست",180],["سكوب بروتين واي + موزة",225],["بيضتان مسلوقتان + خبز أسمر",236]],
+    note:"هذه أهم وجبة في يوم الأثقال. 25–35 غرام بروتين مع بعض الكربوهيدرات يبدآن البناء فورًا."}
+ },
+ cardio:{ // كارديو وفترات
+  pre:{t:"قبل بـ30–60 دقيقة",
+    items:[["زيت زيتون + 3 تمرات + قهوة",182],["موزة",105],["نصف كوب شوفان",75]],
+    note:"روتينك الصباحي الحالي مناسب تمامًا. خفيف وسريع الهضم."},
+  during:{t:"أثناء الجلسة",
+    items:[["ماء 300–500 مل",0]],
+    note:"في يوم الفترات اشرب 500 مل إضافية — حمض اليوريك عندك حدّي."},
+  post:{t:"خلال ساعتين",
+    items:[["زبادي يوناني",100],["بيضتان مسلوقتان",156],["علبة تونة + سلطة",160]],
+    note:"الكارديو لا يستهلك مخزون العضل كالأثقال. وجبة بروتينية معتدلة تكفي."}
+ },
+ swim:{
+  pre:{t:"قبل بـ45–60 دقيقة",
+    items:[["موزة أو 3 تمرات",105],["شريحة توست أسمر",80]],
+    note:"لا تسبح على معدة ممتلئة. وجبة خفيفة جدًا أو لا شيء."},
+  during:{t:"أثناء السباحة",
+    items:[["ماء بين الأطوال",0]],
+    note:"السباحة تخفي العرق فتنسى الشرب — ضع قارورة على الحافة."},
+  post:{t:"خلال ساعة",
+    items:[["زبادي يوناني + توتيات",156],["ساندويتش تونة",180]],
+    note:"الماء البارد يزيد الشهية بعد السباحة. جهّز وجبتك مسبقًا حتى لا تأكل بلا حساب."}
+ },
+ rest:{
+  pre:{t:"يوم راحة",
+    items:[],
+    note:"لا حاجة لتوقيت خاص. وزّع بروتينك على الوجبات كالمعتاد."},
+  during:{t:"",items:[],note:""},
+  post:{t:"",items:[],note:""}
+ }
+};
+
+function fuelType(){
+  const d=new Date(day()+"T12:00:00").getDay();
+  if(d===0||d===2||d===4) return "lift";
+  if(d===1) return "cardio";
+  if(d===3) return "swim";
+  return "rest";
+}
+
+function renderFuel(){
+  const el=document.getElementById('fuelCard'); if(!el) return;
+  const k=fuelType(), F=FUEL[k];
+  const label={lift:"يوم أثقال",cardio:"يوم كارديو فترات",swim:"مشي وسباحة",rest:"يوم راحة"}[k];
+
+  if(k==="rest"){
+    el.innerHTML=`<div style="font-size:12.5px;color:var(--ink2);line-height:1.9">
+      ${F.pre.note}</div>`;
+    return;
+  }
+  const block=(x,icon,col)=>`
+    <div style="border-right:3px solid ${col};padding-right:11px;margin-bottom:14px">
+      <b style="font-size:13px;color:${col};font-family:'Cairo',sans-serif">${icon} ${x.t}</b>
+      ${x.items.map(i=>`<div style="display:flex;font-size:12.5px;padding:4px 0;color:var(--ink2)">
+        <span style="flex:1">${i[0]}</span>${i[1]?`<b style="color:#7D908A">${i[1]}</b>`:''}</div>`).join('')}
+      <div style="font-size:11.5px;color:var(--mute);line-height:1.75;margin-top:4px">${x.note}</div>
+    </div>`;
+  el.innerHTML=`<div style="font-size:11.5px;color:var(--mute);margin-bottom:10px">${label}</div>`
+    + block(F.pre,"🕐","#C9922B") + block(F.during,"💧","#1C6E8C") + block(F.post,"🔄","#2F7A3E")
+    + `<div class="note">الأرقام سعرات تقديرية — احسبها ضمن هدف اليوم لا فوقه.</div>`;
 }
 
 /* بدء التشغيل */
