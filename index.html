@@ -746,7 +746,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 28;
+const APP_VER = 30;
 
 let STORE_OK = null;
 
@@ -1032,12 +1032,13 @@ function renderKpis(){
 function saveWorkout(){
   if(!chosen.length){ toast("اختر نشاطًا واحدًا على الأقل"); return; }
   const g=id=>{const e=document.getElementById(id); if(!e||e.value==='')return null; return parseFloat(e.value);};
-  const parts=[]; let totMin=0, totKm=0, totKcal=0;
+  const parts=[]; let totMin=0, totKm=0, totKcal=0, allLifts=null;
   for(const i of chosen){
     const a=ACTS[i]; const o={name:a.k, icon:a.i};
     a.f.forEach(f=>{ const v=g('a'+i+'_'+f); if(v!=null) o[f]=v; });
     if(!o.min){ toast("أدخل دقائق نشاط: "+a.k); return; }
     if(o.spd==null && o.km && o.min) o.spd = Math.round(o.km/(o.min/60)*10)/10;
+    const lf=collectLifts(i); if(lf){ allLifts=Object.assign(allLifts||{}, lf); }
     totMin+=o.min; totKm+=(o.km||0); totKcal+=(o.kcal||0);
     parts.push(o);
   }
@@ -1050,6 +1051,7 @@ function saveWorkout(){
             spdmax: Math.max(0,...parts.map(p=>p.spdmax||0))||null,
             jog: jogMin||null,
             avg:g('wAvg'), max:g('wMax'), rec:g('wRec'),
+            lifts:allLifts,
             note:document.getElementById('wNote').value, ts:Date.now() };
   const prev=[...S.workouts].reverse().find(x=>x.type===w.type);
   S.workouts.push(w); save();
@@ -1083,6 +1085,11 @@ function showCompare(w,prev){
     const z = w.avg<125?"حرق الدهون" : w.avg<140?"هوائي" : w.avg<155?"عالٍ" : "فوق المستهدف";
     lines.push(`متوسط النبض ${w.avg} — ${pct}٪ من الأقصى · منطقة ${z}`);
     if(w.avg>=155) lines.push(`<span style="color:#9E2B36">الشدة أعلى من اللازم — خفّف السرعة في الجلسة القادمة.</span>`);
+  }
+  if(w.lifts){
+    const pl=[...S.workouts].reverse().find(x=>x!==w&&x.lifts);
+    const lc=liftCompare(w.lifts, pl&&pl.lifts);
+    if(lc) lines.push(lc);
   }
   if(prev){
     const d=[];
@@ -1134,6 +1141,7 @@ function renderLog(){
     if(w.km) bits.push(w.km+" كم");
     if(w.spd) bits.push(w.spd+" كم/س");
     if(w.jog) bits.push("هرولة "+w.jog+" د");
+    if(w.lifts){ const v=liftVolume(w.lifts); if(v) bits.push(v.toLocaleString('en')+" كجم"); }
     if(w.avg) bits.push("نبض "+w.avg);
     if(w.max&&w.rec) bits.push("تعافي -"+(w.max-w.rec));
     const ic = w.parts ? w.parts.map(p=>p.icon).join(" ") : "🏃";
@@ -1841,7 +1849,7 @@ function renderActRows(){
       <div class="grid3" style="margin-top:8px">
         ${a.f.map(f=>`<div><label class="f" style="margin:0 0 4px">${FLAB[f]}</label>
           <input class="in" id="a${i}_${f}" type="number" inputmode="decimal" style="padding:9px"></div>`).join('')}
-      </div></div>`;
+      </div>${liftRows(i)}</div>`;
   }).join('');
 }
 function prefillToday(){
@@ -3027,27 +3035,182 @@ function undoWater(){
 /* ============================================================
    دليل التمارين — رسوم وخطوات
    ============================================================ */
-function fig(parts){
-  return `<svg viewBox="0 0 200 130" style="width:100%;height:auto;display:block">
-    <rect width="200" height="130" fill="#F2F6F4" rx="10"/>
-    <line x1="12" y1="118" x2="188" y2="118" stroke="#C8D5D0" stroke-width="2"/>
-    ${parts}</svg>`;
+/* رسوم تشريحية — جسم بأحجام واقعية */
+const P={ink:"#20423A",lite:"#4E7A6C",acc:"#B4531F",bar:"#33403D",gold:"#C9922B",bg:"#EEF3F1",gr:"#C3D2CC"};
+
+function body(o){
+  // o: {x,y,scale, head:[hx,hy], torso:"path", arms:"path", legs:"path", color}
+  return o;
 }
-const G='stroke="#0C3B32" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"';
-const G2='stroke="#B4531F" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"';
-const HEAD=(x,y,c)=>`<circle cx="${x}" cy="${y}" r="9" fill="${c||'#0C3B32'}"/>`;
-const ARROW=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#C9922B" stroke-width="2.5"
-  stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
-const DEFS=`<defs><marker id="ah" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto"
-  markerUnits="strokeWidth"><path d="M0 0 L4 2 L0 4 z" fill="#C9922B"/></marker></defs>`;
+function svgWrap(inner,h){
+  return `<svg viewBox="0 0 240 ${h||150}" style="width:100%;height:auto;display:block;border-radius:12px;background:${P.bg}">
+    <defs>
+      <marker id="mk" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto" markerUnits="strokeWidth">
+        <path d="M0 0 L4 2 L0 4 z" fill="${P.gold}"/></marker>
+      <linearGradient id="fl" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F7FAF9"/><stop offset="1" stop-color="#E4EDE9"/></linearGradient>
+    </defs>
+    <rect width="240" height="${h||150}" fill="url(#fl)"/>
+    ${inner}</svg>`;
+}
+const FLOOR=(y,x1,x2)=>`<line x1="${x1||14}" y1="${y}" x2="${x2||226}" y2="${y}" stroke="${P.gr}" stroke-width="3" stroke-linecap="round"/>`;
+const ARR=(x1,y1,x2,y2,curve)=>curve
+  ? `<path d="M${x1} ${y1} Q${curve[0]} ${curve[1]} ${x2} ${y2}" stroke="${P.gold}" stroke-width="2.6" fill="none" stroke-dasharray="5 4" marker-end="url(#mk)"/>`
+  : `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${P.gold}" stroke-width="2.6" stroke-dasharray="5 4" marker-end="url(#mk)"/>`;
+
+// شخص: رأس بيضوي + جذع سميك + أطراف مفصّلة
+function man(c, head, torso, limbs, extra){
+  const col=c||P.ink;
+  return `<g stroke="${col}" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="${head[0]}" cy="${head[1]}" rx="8.5" ry="10" fill="${col}" stroke="none"/>
+    <path d="${torso}" stroke-width="11" opacity=".95"/>
+    <path d="${limbs}" stroke-width="6.5"/>
+    ${extra||''}
+  </g>`;
+}
+const PLATE=(x,y,w,h,col)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w,h)/2}" fill="${col||P.bar}"/>`;
+const DUMB=(x,y,ang)=>`<g transform="translate(${x},${y}) rotate(${ang||0})">
+  <rect x="-13" y="-3.5" width="26" height="7" rx="3.5" fill="${P.bar}"/>
+  <rect x="-16" y="-7" width="6" height="14" rx="2" fill="${P.bar}"/>
+  <rect x="10" y="-7" width="6" height="14" rx="2" fill="${P.bar}"/></g>`;
+const FIGS = {
+"سكوات": svgWrap(FLOOR(132)+
+  // وضع الوقوف (باهت)
+  man(P.gr,[62,34], "M62,46 L62,80", "M62,52 L48,72 M62,52 L76,72 M62,80 L54,106 L54,132 M62,80 L70,106 L70,132")+
+  // وضع النزول
+  man(P.ink,[150,44], "M150,56 L146,88", "M150,62 L128,74 M150,62 L172,74 M146,88 L124,102 L124,132 M146,88 L170,104 L170,132")+
+  `<path d="M124 102 L124 132 M170 104 L170 132" stroke="${P.ink}" stroke-width="6.5" fill="none" stroke-linecap="round"/>`+
+  ARR(100,60,120,88,[112,68])+
+  `<text x="62" y="146" font-size="10" fill="${P.lite}" text-anchor="middle">وقوف</text>`+
+  `<text x="150" y="146" font-size="10" fill="${P.acc}" text-anchor="middle">نزول حتى موازاة الفخذ</text>`),
+
+"ضغط صدر بالدمبل — قبضة محايدة": svgWrap(
+  `<rect x="40" y="96" width="164" height="12" rx="6" fill="${P.gr}"/>`+
+  `<rect x="60" y="108" width="9" height="24" rx="4" fill="${P.gr}"/><rect x="176" y="108" width="9" height="24" rx="4" fill="${P.gr}"/>`+
+  man(P.ink,[56,86], "M68,90 L150,90", "M92,90 L92,58 M124,90 L124,58 M150,90 L172,112 M150,90 L178,104")+
+  DUMB(92,50)+DUMB(124,50)+
+  ARR(108,44,108,20)+
+  `<text x="120" y="146" font-size="10" fill="${P.lite}" text-anchor="middle">الراحتان متقابلتان · المرفقان قريبان من الجسم</text>`,150),
+
+"تجديف بالكيبل": svgWrap(FLOOR(128)+
+  `<rect x="206" y="30" width="12" height="98" rx="4" fill="${P.gr}"/>`+
+  `<rect x="44" y="112" width="120" height="10" rx="5" fill="${P.gr}"/>`+
+  man(P.ink,[74,50], "M74,62 L74,100", "M74,68 L118,80 M74,100 L120,110 L156,110")+
+  `<line x1="118" y1="80" x2="206" y2="66" stroke="${P.lite}" stroke-width="3"/>`+
+  `<rect x="112" y="74" width="14" height="13" rx="3" fill="${P.bar}"/>`+
+  ARR(150,92,110,92)+
+  `<text x="120" y="144" font-size="10" fill="${P.lite}" text-anchor="middle">اسحب نحو البطن · اضمم لوحَي الكتف</text>`),
+
+"جسر الورك": svgWrap(FLOOR(126)+
+  man(P.gr,[42,110], "M52,110 L104,110", "M104,110 L128,110 M104,110 L128,124")+
+  man(P.ink,[42,110], "M52,106 L112,80", "M112,80 L132,110 L132,126 M112,80 L128,108")+
+  ARR(88,74,88,48)+
+  `<line x1="46" y1="102" x2="118" y2="74" stroke="${P.gold}" stroke-width="2" stroke-dasharray="4 3"/>`+
+  `<text x="120" y="142" font-size="10" fill="${P.lite}" text-anchor="middle">خط مستقيم من الركبة إلى الكتف</text>`),
+
+"بلانك": svgWrap(FLOOR(124)+
+  man(P.ink,[46,58], "M56,62 L176,92", "M62,64 L62,102 L86,102 M176,92 L188,124")+
+  `<line x1="42" y1="52" x2="190" y2="90" stroke="${P.gold}" stroke-width="2" stroke-dasharray="5 4"/>`+
+  `<text x="120" y="142" font-size="10" fill="${P.lite}" text-anchor="middle">المرفق تحت الكتف · الجسم خط واحد</text>`),
+
+"سحب أرضي": svgWrap(FLOOR(128)+
+  `<rect x="206" y="34" width="12" height="94" rx="4" fill="${P.gr}"/>`+
+  `<rect x="44" y="112" width="120" height="10" rx="5" fill="${P.gr}"/>`+
+  man(P.ink,[76,46], "M76,58 L76,98", "M76,64 L124,72 M76,98 L122,108 L158,108")+
+  `<line x1="124" y1="72" x2="206" y2="60" stroke="${P.lite}" stroke-width="3"/>`+
+  `<rect x="118" y="66" width="14" height="13" rx="3" fill="${P.bar}"/>`+
+  ARR(152,86,116,86)+
+  `<text x="120" y="144" font-size="10" fill="${P.lite}" text-anchor="middle">الظهر مستقيم · الصدر مرفوع</text>`),
+
+"ضغط صدر مسطح — قبضة ضيقة": svgWrap(
+  `<rect x="40" y="96" width="164" height="12" rx="6" fill="${P.gr}"/>`+
+  `<rect x="60" y="108" width="9" height="24" rx="4" fill="${P.gr}"/><rect x="176" y="108" width="9" height="24" rx="4" fill="${P.gr}"/>`+
+  man(P.ink,[56,86], "M68,90 L150,90", "M102,90 L102,58 M118,90 L118,58 M150,90 L172,112 M150,90 L178,104")+
+  `<rect x="76" y="46" width="70" height="8" rx="4" fill="${P.bar}"/>`+
+  PLATE(70,38,9,24)+PLATE(143,38,9,24)+
+  ARR(110,34,110,14)+
+  `<text x="120" y="146" font-size="10" fill="${P.lite}" text-anchor="middle">قبضة أضيق من الكتفين · المرفقان للداخل</text>`,150),
+
+"رفرفة جانبية — حتى مستوى الكتف فقط": svgWrap(FLOOR(134)+
+  man(P.ink,[120,34], "M120,46 L120,92", "M120,54 L74,66 M120,54 L166,66 M120,92 L108,132 M120,92 L132,132")+
+  DUMB(70,68,12)+DUMB(170,68,-12)+
+  `<line x1="40" y1="54" x2="200" y2="54" stroke="#9E2B36" stroke-width="2" stroke-dasharray="6 4"/>`+
+  `<text x="120" y="48" font-size="10.5" fill="#9E2B36" text-anchor="middle" font-weight="bold">لا تتجاوز مستوى الكتف</text>`+
+  ARR(196,96,196,72)+
+  `<text x="120" y="148" font-size="10" fill="${P.lite}" text-anchor="middle">المرفق مثني قليلًا · وزن خفيف</text>`),
+
+"بايسبس": svgWrap(FLOOR(134)+
+  man(P.ink,[120,32], "M120,44 L120,92", "M120,52 L100,74 M100,74 L114,58 M120,52 L140,74 M140,74 L126,58 M120,92 L110,132 M120,92 L130,132")+
+  DUMB(120,54,0)+
+  ARR(158,84,158,58,[168,72])+
+  `<text x="120" y="148" font-size="10" fill="${P.lite}" text-anchor="middle">المرفق ملتصق بالجذع · لا تأرجح</text>`),
+
+"ترايسبس بالحبل": svgWrap(FLOOR(134)+
+  `<rect x="196" y="18" width="12" height="116" rx="4" fill="${P.gr}"/>`+
+  man(P.ink,[86,36], "M86,48 L86,96", "M86,56 L112,68 M112,68 L118,96 M86,96 L76,134 M86,96 L96,134")+
+  `<line x1="112" y1="68" x2="196" y2="34" stroke="${P.lite}" stroke-width="3"/>`+
+  `<path d="M118 96 L112 112 M118 96 L126 112" stroke="${P.bar}" stroke-width="4" fill="none" stroke-linecap="round"/>`+
+  ARR(146,86,146,110)+
+  `<text x="120" y="148" font-size="10" fill="${P.lite}" text-anchor="middle">ثبّت المرفقين · ادفع لأسفل فقط</text>`),
+
+"رفع أرجل": svgWrap(FLOOR(126)+
+  man(P.gr,[40,108], "M50,108 L112,108", "M112,108 L164,108")+
+  man(P.ink,[40,108], "M50,108 L112,108", "M112,108 L140,54")+
+  ARR(160,96,160,60)+
+  `<text x="120" y="142" font-size="10" fill="${P.lite}" text-anchor="middle">أسفل الظهر ملتصق بالأرض</text>`),
+
+"دراجة": svgWrap(FLOOR(126)+
+  man(P.ink,[50,94], "M60,98 L116,104", "M116,104 L154,80 M116,104 L146,120 M66,92 L92,74 M66,92 L88,82")+
+  ARR(176,94,150,106,[172,110])+
+  `<text x="120" y="142" font-size="10" fill="${P.lite}" text-anchor="middle">مرفق لركبة معاكسة · ببطء</text>`),
+
+"ضغط الأرجل": svgWrap(
+  `<rect x="28" y="70" width="66" height="56" rx="8" fill="${P.gr}"/>`+
+  `<ellipse cx="56" cy="62" rx="8.5" ry="10" fill="${P.ink}"/>`+
+  `<path d="M62,78 L94,92" stroke="${P.ink}" stroke-width="11" fill="none" stroke-linecap="round"/>`+
+  `<path d="M94,92 L136,72 M136,72 L176,50" stroke="${P.ink}" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`+
+  `<rect x="168" y="26" width="16" height="52" rx="5" fill="${P.bar}"/>`+
+  PLATE(186,30,10,44,P.gr)+
+  ARR(146,40,182,22)+
+  `<text x="120" y="146" font-size="10" fill="${P.lite}" text-anchor="middle">لا تقفل الركبتين · الظهر ملتصق</text>`,150),
+
+"ديدليفت روماني — وزن خفيف": svgWrap(FLOOR(134)+
+  man(P.gr,[66,30], "M66,42 L66,86", "M66,86 L62,134 M66,50 L66,88")+
+  man(P.ink,[164,50], "M164,62 L134,86", "M134,86 L130,134 M150,70 L150,102")+
+  `<rect x="136" y="98" width="30" height="8" rx="4" fill="${P.bar}"/>`+
+  PLATE(128,90,9,24)+PLATE(165,90,9,24)+
+  `<rect x="52" y="84" width="30" height="8" rx="4" fill="${P.gr}"/>`+
+  ARR(108,56,124,78,[118,62])+
+  `<text x="120" y="148" font-size="10" fill="${P.lite}" text-anchor="middle">الظهر مستقيم · البار ملاصق للساق</text>`),
+
+"لانجز بالدمبل": svgWrap(FLOOR(134)+
+  man(P.ink,[118,30], "M118,42 L118,80", "M118,50 L92,66 M118,50 L144,66 M118,80 L82,104 L82,134 M118,80 L152,110 L166,134")+
+  DUMB(88,68,8)+DUMB(148,68,-8)+
+  `<path d="M152,110 L166,134" stroke="${P.ink}" stroke-width="6.5" fill="none" stroke-linecap="round"/>`+
+  ARR(190,86,190,116)+
+  `<text x="120" y="148" font-size="10" fill="${P.lite}" text-anchor="middle">الركبة الأمامية فوق الكاحل</text>`),
+
+"رفع السمانة": svgWrap(FLOOR(134)+
+  man(P.gr,[76,34], "M76,46 L76,94", "M76,94 L68,130 M76,94 L84,130")+
+  `<line x1="60" y1="132" x2="92" y2="132" stroke="${P.gr}" stroke-width="6" stroke-linecap="round"/>`+
+  man(P.ink,[164,24], "M164,36 L164,84", "M164,84 L156,118 M164,84 L172,118")+
+  `<path d="M150,118 L150,128 L178,128" stroke="${P.ink}" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`+
+  ARR(120,68,120,44)+
+  `<text x="120" y="148" font-size="10" fill="${P.lite}" text-anchor="middle">ارفع الكعبين · اعصر ثم انزل ببطء</text>`),
+
+"التدوير الخارجي بحبل مطاطي": svgWrap(FLOOR(134)+
+  `<rect x="200" y="40" width="10" height="94" rx="4" fill="${P.gr}"/>`+
+  man(P.ink,[80,38], "M80,50 L80,98", "M80,58 L104,72 M104,72 L140,60 M80,98 L70,134 M80,98 L90,134")+
+  `<line x1="140" y1="60" x2="200" y2="66" stroke="${P.lite}" stroke-width="3"/>`+
+  `<rect x="100" y="66" width="11" height="13" rx="3" fill="${P.bar}"/>`+
+  `<path d="M104 72 m -16 0 a 16 16 0 1 1 32 0" stroke="${P.gold}" stroke-width="2" fill="none" stroke-dasharray="4 3"/>`+
+  ARR(160,80,160,54)+
+  `<text x="120" y="148" font-size="10" fill="${P.lite}" text-anchor="middle">المرفق لا يفارق الجذع أبدًا</text>`)
+};
 
 const EXER = {
 "سكوات":{
   m:"الفخذان · المؤخرة · أسفل الظهر",
-  svg:fig(DEFS+
-    HEAD(52,28)+`<path d="M52 37 L52 68 M52 68 L44 96 L44 118 M52 68 L60 96 L60 118 M52 46 L38 60 M52 46 L66 60" ${G}/>`+
-    HEAD(140,44)+`<path d="M140 53 L140 78 M140 78 L126 92 L126 118 M140 78 L154 92 L154 118 M140 60 L126 74 M140 60 L154 74" ${G2}/>`+
-    ARROW(84,52,110,72)),
   s:["قف والقدمان بعرض الكتفين، أصابع القدم للخارج قليلًا",
      "ادفع مؤخرتك للخلف كأنك تجلس على كرسي",
      "انزل حتى يوازي الفخذ الأرض — أو أقل إن كان الركبة تؤلم",
@@ -3058,13 +3221,6 @@ const EXER = {
 },
 "ضغط صدر بالدمبل — قبضة محايدة":{
   m:"الصدر · الترايسبس · الكتف الأمامي",
-  svg:fig(DEFS+
-    `<rect x="34" y="86" width="134" height="9" rx="4" fill="#C8D5D0"/>`+
-    HEAD(48,74)+`<path d="M57 78 L120 78" ${G}/>`+
-    `<path d="M74 78 L74 52 M104 78 L104 52" ${G}/>`+
-    `<rect x="64" y="44" width="20" height="9" rx="4" fill="#0C3B32"/>`+
-    `<rect x="94" y="44" width="20" height="9" rx="4" fill="#0C3B32"/>`+
-    ARROW(89,40,89,20)),
   s:["استلقِ على المقعد، القدمان ثابتتان على الأرض",
      "امسك الدمبلين وراحتا اليدين متقابلتان — هذه القبضة المحايدة",
      "أنزل الدمبلين إلى جانبَي صدرك ببطء",
@@ -3076,12 +3232,6 @@ const EXER = {
 },
 "تجديف بالكيبل":{
   m:"الظهر العريض · منتصف الظهر · البايسبس",
-  svg:fig(DEFS+
-    `<rect x="164" y="30" width="10" height="88" fill="#C8D5D0"/>`+
-    HEAD(64,52)+`<path d="M64 61 L64 92 M64 92 L82 108 L104 108 M64 68 L110 74" ${G}/>`+
-    `<path d="M110 74 L164 66" stroke="#7D908A" stroke-width="2.5"/>`+
-    `<rect x="104" y="68" width="14" height="12" rx="3" fill="#0C3B32"/>`+
-    ARROW(128,86,96,86)),
   s:["اجلس وثبّت قدميك على المسند، الركبتان مثنيتان قليلًا",
      "امسك المقبض وظهرك مستقيم وصدرك مرفوع",
      "اسحب المقبض نحو بطنك مع ضم لوحَي الكتف",
@@ -3092,10 +3242,6 @@ const EXER = {
 },
 "جسر الورك":{
   m:"المؤخرة · أوتار الركبة · عضلات الجذع",
-  svg:fig(DEFS+
-    HEAD(44,96)+`<path d="M53 96 L96 96 M96 96 L112 108 L112 118 M96 96 L112 84" stroke="#C8D5D0" stroke-width="4" fill="none" stroke-linecap="round"/>`+
-    HEAD(44,96)+`<path d="M53 94 L100 72 M100 72 L114 96 L114 118" ${G}/>`+
-    ARROW(80,66,80,48)),
   s:["استلقِ على ظهرك، الركبتان مثنيتان والقدمان مسطحتان بعرض الحوض",
      "قرّب كعبيك من مؤخرتك، واليدان على الجانبين",
      "ادفع بكعبيك وارفع حوضك حتى يصير جسمك خطًا مستقيمًا من الركبة إلى الكتف",
@@ -3106,9 +3252,6 @@ const EXER = {
 },
 "بلانك":{
   m:"عضلات الجذع كاملة · أسفل الظهر · الكتف",
-  svg:fig(DEFS+
-    HEAD(44,64)+`<path d="M53 66 L150 84 M60 68 L60 96 L74 96 M150 84 L156 118" ${G}/>`+
-    `<path d="M50 60 L156 78" stroke="#C9922B" stroke-width="2" stroke-dasharray="4 3"/>`),
   s:["استند على ساعديك وأصابع قدميك",
      "المرفقان تحت الكتفين مباشرة",
      "اجعل جسمك خطًا مستقيمًا من الرأس إلى الكعب",
@@ -3121,11 +3264,6 @@ const EXER = {
 Object.assign(EXER, {
 "سحب أرضي":{
   m:"الظهر العريض · منتصف الظهر · البايسبس",
-  svg:fig(DEFS+
-    `<rect x="164" y="30" width="10" height="88" fill="#C8D5D0"/>`+
-    HEAD(64,52)+`<path d="M64 61 L64 92 M64 92 L82 108 L104 108 M64 68 L112 72" ${G}/>`+
-    `<path d="M112 72 L164 62" stroke="#7D908A" stroke-width="2.5"/>`+
-    ARROW(130,84,98,84)),
   s:["اجلس مستقيمًا وثبّت قدميك على المسند",
      "امسك المقبض والذراعان ممدودتان",
      "اسحب نحو أسفل الصدر مع ضم لوحَي الكتف",
@@ -3135,11 +3273,6 @@ Object.assign(EXER, {
 },
 "ضغط صدر مسطح — قبضة ضيقة":{
   m:"الصدر · الترايسبس",
-  svg:fig(DEFS+
-    `<rect x="34" y="86" width="134" height="9" rx="4" fill="#C8D5D0"/>`+
-    HEAD(48,74)+`<path d="M57 78 L120 78 M82 78 L82 52 M96 78 L96 52" ${G}/>`+
-    `<rect x="72" y="44" width="36" height="8" rx="4" fill="#0C3B32"/>`+
-    ARROW(89,38,89,20)),
   s:["استلقِ والقبضة أضيق من عرض الكتفين قليلًا",
      "أنزل البار إلى وسط صدرك والمرفقان قريبان من الجسم",
      "ادفع لأعلى مع الزفير",
@@ -3150,12 +3283,6 @@ Object.assign(EXER, {
 },
 "رفرفة جانبية — حتى مستوى الكتف فقط":{
   m:"الكتف الجانبي",
-  svg:fig(DEFS+
-    HEAD(100,32)+`<path d="M100 41 L100 84 M100 84 L90 118 M100 84 L110 118 M100 50 L64 62 M100 50 L136 62" ${G}/>`+
-    `<rect x="54" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
-    `<rect x="130" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
-    `<path d="M40 50 L160 50" stroke="#9E2B36" stroke-width="2" stroke-dasharray="5 3"/>`+
-    `<text x="100" y="44" font-size="9" fill="#9E2B36" text-anchor="middle">لا تتجاوز هذا الخط</text>`),
   s:["قف والدمبلان بجانبك، مرفقان مثنيان قليلًا",
      "ارفع ذراعيك للجانبين حتى مستوى الكتف فقط",
      "توقّف عند الخط — لا ترفع أعلى",
@@ -3166,10 +3293,6 @@ Object.assign(EXER, {
 },
 "بايسبس":{
   m:"العضلة ذات الرأسين · الساعد",
-  svg:fig(DEFS+
-    HEAD(100,30)+`<path d="M100 39 L100 84 M100 84 L90 118 M100 84 L110 118 M100 50 L82 70 L96 60 M100 50 L118 70 L104 60" ${G}/>`+
-    `<rect x="86" y="54" width="28" height="8" rx="4" fill="#0C3B32"/>`+
-    ARROW(134,74,134,54)),
   s:["قف والمرفقان ملتصقان بجذعك",
      "ارفع الوزن بثني المرفق فقط",
      "اعصر في الأعلى ثم أنزل ببطء",
@@ -3179,11 +3302,6 @@ Object.assign(EXER, {
 },
 "ترايسبس بالحبل":{
   m:"العضلة ثلاثية الرؤوس",
-  svg:fig(DEFS+
-    `<rect x="150" y="20" width="10" height="98" fill="#C8D5D0"/>`+
-    HEAD(74,34)+`<path d="M74 43 L74 88 M74 88 L64 118 M74 88 L84 118 M74 54 L100 62 L106 84" ${G}/>`+
-    `<path d="M100 62 L150 34" stroke="#7D908A" stroke-width="2.5"/>`+
-    ARROW(122,80,122,100)),
   s:["قف أمام الكيبل والحبل في يديك",
      "ثبّت المرفقين بجانب جذعك تمامًا",
      "ادفع الحبل لأسفل حتى يستقيم الذراعان",
@@ -3194,11 +3312,6 @@ Object.assign(EXER, {
 },
 "رفع أرجل":{
   m:"أسفل البطن · عضلات الجذع",
-  svg:fig(DEFS+
-    HEAD(38,96)+`<path d="M47 96 L96 96" ${G}/>`+
-    `<path d="M96 96 L140 96" stroke="#C8D5D0" stroke-width="4" stroke-linecap="round"/>`+
-    `<path d="M96 96 L120 56" ${G2}/>`+
-    ARROW(136,84,136,58)),
   s:["استلقِ على ظهرك واليدان تحت مؤخرتك للدعم",
      "ارفع رجليك مستقيمتين حتى تصير عمودية",
      "أنزل ببطء دون أن تلمس الأرض",
@@ -3208,9 +3321,6 @@ Object.assign(EXER, {
 },
 "دراجة":{
   m:"البطن المائل · أسفل البطن",
-  svg:fig(DEFS+
-    HEAD(46,86)+`<path d="M55 88 L100 92 M100 92 L128 74 M100 92 L124 108 M62 84 L88 70" ${G}/>`+
-    ARROW(140,86,116,96)),
   s:["استلقِ واليدان خلف رأسك بلا شدّ للرقبة",
      "ارفع كتفيك قليلًا عن الأرض",
      "قرّب مرفقك الأيمن من ركبتك اليسرى مع مدّ الرجل الأخرى",
@@ -3222,12 +3332,6 @@ Object.assign(EXER, {
 Object.assign(EXER, {
 "ضغط الأرجل":{
   m:"الفخذان · المؤخرة",
-  svg:fig(DEFS+
-    `<rect x="28" y="70" width="52" height="42" rx="6" fill="#C8D5D0"/>`+
-    HEAD(48,62)+
-    `<path d="M80 92 L118 76 M118 76 L150 60" ${G}/>`+
-    `<rect x="140" y="34" width="14" height="52" rx="4" fill="#0C3B32"/>`+
-    ARROW(120,44,150,30)),
   s:["اجلس وظهرك ملتصق بالمسند تمامًا",
      "ضع قدميك بعرض الكتفين في منتصف اللوح",
      "أنزل الوزن حتى تصير الركبة 90 درجة",
@@ -3237,12 +3341,6 @@ Object.assign(EXER, {
 },
 "ديدليفت روماني — وزن خفيف":{
   m:"أوتار الركبة · المؤخرة · أسفل الظهر",
-  svg:fig(DEFS+
-    HEAD(58,26)+`<path d="M58 35 L58 74 M58 74 L54 118 M58 44 L58 78" ${G}/>`+
-    HEAD(134,44)+`<path d="M134 53 L112 76 M112 76 L110 118 M124 62 L124 92" ${G2}/>`+
-    `<rect x="112" y="88" width="26" height="7" rx="3" fill="#B4531F"/>`+
-    `<rect x="46" y="74" width="26" height="7" rx="3" fill="#0C3B32"/>`+
-    ARROW(88,50,104,66)),
   s:["قف والبار أمام فخذيك، الركبتان مثنيتان قليلًا جدًا",
      "ادفع مؤخرتك للخلف وأنزل البار بمحاذاة ساقيك",
      "انزل حتى تشعر بشدّ في خلف الفخذ — لا أبعد",
@@ -3254,11 +3352,6 @@ Object.assign(EXER, {
 },
 "لانجز بالدمبل":{
   m:"الفخذان · المؤخرة · التوازن",
-  svg:fig(DEFS+
-    HEAD(96,26)+`<path d="M96 35 L96 70 M96 70 L70 96 L70 118 M96 70 L124 92 L136 118 M96 44 L78 62 M96 44 L114 62" ${G}/>`+
-    `<rect x="68" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
-    `<rect x="108" y="58" width="16" height="8" rx="3" fill="#0C3B32"/>`+
-    ARROW(150,74,150,98)),
   s:["قف مستقيمًا والدمبلان بجانبك",
      "اخطُ خطوة واسعة للأمام",
      "أنزل حتى تقترب ركبتك الخلفية من الأرض",
@@ -3269,12 +3362,6 @@ Object.assign(EXER, {
 },
 "رفع السمانة":{
   m:"عضلة الساق الخلفية",
-  svg:fig(DEFS+
-    HEAD(76,26)+`<path d="M76 35 L76 82 M76 82 L68 112 M76 82 L84 112" ${G}/>`+
-    `<path d="M60 112 L92 112" stroke="#0C3B32" stroke-width="4" stroke-linecap="round"/>`+
-    HEAD(138,18)+`<path d="M138 27 L138 74 M138 74 L130 106 M138 74 L146 106" ${G2}/>`+
-    `<path d="M132 106 L152 106" stroke="#B4531F" stroke-width="4" stroke-linecap="round"/>`+
-    ARROW(110,54,110,34)),
   s:["قف مستقيمًا والدمبلان بجانبك",
      "ارفع كعبيك عن الأرض حتى تقف على أطراف أصابعك",
      "اعصر السمانة في الأعلى ثانية",
@@ -3284,12 +3371,6 @@ Object.assign(EXER, {
 },
 "التدوير الخارجي بحبل مطاطي":{
   m:"الكفة المدوّرة — تأهيل الكتف",
-  svg:fig(DEFS+
-    HEAD(70,34)+`<path d="M70 43 L70 90 M70 90 L62 118 M70 90 L78 118 M70 54 L92 66 L120 54" ${G}/>`+
-    `<path d="M120 54 L162 60" stroke="#7D908A" stroke-width="2.5"/>`+
-    `<rect x="88" y="60" width="10" height="12" rx="3" fill="#0C3B32"/>`+
-    ARROW(132,76,132,50)+
-    `<circle cx="92" cy="66" r="13" fill="none" stroke="#C9922B" stroke-width="2" stroke-dasharray="3 3"/>`),
   s:["ثبّت الحبل بمستوى المرفق وقف بجانبه",
      "المرفق ملتصق بجذعك وزاوية 90 درجة — لا يفارق الجسم أبدًا",
      "أدر ساعدك للخارج بعيدًا عن بطنك",
@@ -3321,7 +3402,7 @@ function openEx(t){
   `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
      <h3>${esc(k)}</h3>
      <div class="sub">${esc(x.m)}</div>
-     ${x.svg}
+     ${FIGS[k] || x.svg || ""}
      ${x.sh?`<div class="warn" style="margin-top:12px"><b>ملاحظة الكتف:</b> ${esc(x.sh)}</div>`:''}
      <div style="margin-top:14px"><b style="font-size:13.5px;font-family:'Cairo',sans-serif">الخطوات</b>
        ${x.s.map((st,i)=>`<div style="display:flex;gap:9px;font-size:12.5px;line-height:1.85;padding:4px 0;
@@ -3337,6 +3418,95 @@ function openEx(t){
         ▶︎ شاهد فيديو للحركة</a>
      <button class="btn ghost" onclick="closeSheet()">إغلاق</button>
    </div></div>`;
+}
+
+
+/* ============================================================
+   تسجيل أوزان الأثقال
+   ============================================================ */
+const LIFTS={
+ 5:["سكوات","ضغط صدر بالدمبل — قبضة محايدة","تجديف بالكيبل","جسر الورك","بلانك"],
+ 6:["تجديف بالكيبل","سحب أرضي","ضغط صدر مسطح — قبضة ضيقة","رفرفة جانبية — حتى مستوى الكتف فقط","بايسبس","ترايسبس بالحبل"],
+ 7:["سكوات","ضغط الأرجل","ديدليفت روماني — وزن خفيف","لانجز بالدمبل","رفع السمانة"],
+ 8:["بلانك","رفع أرجل","دراجة"]
+};
+
+function lastLift(name){
+  for(let i=S.workouts.length-1;i>=0;i--){
+    const L=S.workouts[i].lifts;
+    if(L && L[name]) return L[name];
+  }
+  return null;
+}
+
+function liftRows(actIdx){
+  const list=LIFTS[actIdx]; if(!list) return '';
+  return `<div style="margin-top:10px">
+    <div style="font-size:11.5px;color:var(--mute);margin-bottom:7px">
+      الأوزان — يُملأ تلقائيًا بآخر جلسة، عدّله إن زدت</div>
+    ${list.map((n,j)=>{
+      const p=lastLift(n)||{};
+      const bw = n==="بلانك"||n==="رفع أرجل"||n==="دراجة";
+      return `<div class="card" style="padding:10px 12px;margin-bottom:7px;background:#FAFCFB">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <b style="flex:1;font-size:12.5px">${n}</b>
+          ${exKey(n)?`<span onclick="openEx('${n.replace(/'/g,"\\'")}')"
+            style="font-size:11px;color:var(--green);background:#EAF3EF;padding:3px 8px;border-radius:20px">شرح</span>`:''}
+          ${p.w!==undefined||p.r!==undefined?`<span style="font-size:10.5px;color:#9AACA6">
+            آخر مرة: ${p.w?p.w+' كجم × ':''}${p.r||''}${p.s?' × '+p.s:''}</span>`:''}
+        </div>
+        <div class="grid3">
+          <div><label class="f" style="margin:0 0 3px">${bw?'ثوانٍ':'وزن كجم'}</label>
+            <input class="in" id="lf${actIdx}_${j}_w" type="number" inputmode="decimal" style="padding:8px"
+              value="${p.w!==undefined?p.w:''}"></div>
+          <div><label class="f" style="margin:0 0 3px">تكرارات</label>
+            <input class="in" id="lf${actIdx}_${j}_r" type="number" inputmode="numeric" style="padding:8px"
+              value="${p.r!==undefined?p.r:12}"></div>
+          <div><label class="f" style="margin:0 0 3px">مجموعات</label>
+            <input class="in" id="lf${actIdx}_${j}_s" type="number" inputmode="numeric" style="padding:8px"
+              value="${p.s!==undefined?p.s:3}"></div>
+        </div></div>`;
+    }).join('')}
+  </div>`;
+}
+
+function collectLifts(actIdx){
+  const list=LIFTS[actIdx]; if(!list) return null;
+  const out={};
+  list.forEach((n,j)=>{
+    const g=id=>{const e=document.getElementById(id); return e&&e.value!==''?parseFloat(e.value):null;};
+    const w=g('lf'+actIdx+'_'+j+'_w'), r=g('lf'+actIdx+'_'+j+'_r'), st=g('lf'+actIdx+'_'+j+'_s');
+    if(w!==null||r!==null) out[n]={w:w,r:r,s:st};
+  });
+  return Object.keys(out).length?out:null;
+}
+
+function liftVolume(L){
+  if(!L) return 0;
+  let v=0;
+  Object.keys(L).forEach(n=>{ const x=L[n]; if(x.w&&x.r&&x.s) v+=x.w*x.r*x.s; });
+  return Math.round(v);
+}
+
+function liftCompare(cur,prev){
+  if(!cur) return '';
+  const rows=[];
+  Object.keys(cur).forEach(n=>{
+    const c=cur[n], p=prev&&prev[n];
+    if(!c.w) return;
+    if(p&&p.w){
+      const d=+(c.w-p.w).toFixed(1);
+      if(d!==0) rows.push(`${n}: <b style="color:${d>0?'#2F8F6E':'#B4531F'}">${d>0?'+':''}${d} كجم</b>`);
+    }
+  });
+  const v=liftVolume(cur), pv=liftVolume(prev);
+  let h='';
+  if(v) h+=`<div style="font-size:13.5px;padding:5px 0;border-bottom:1px dashed #E3EAE7">
+    الحجم الكلي المرفوع <b>${v.toLocaleString('en')} كجم</b>
+    ${pv?` · عن الجلسة السابقة <b style="color:${v>=pv?'#2F8F6E':'#B4531F'}">${v>pv?'+':''}${v-pv}</b>`:''}</div>`;
+  if(rows.length) h+=`<div style="font-size:12.5px;padding:5px 0;color:#7D908A">تغيّر الأوزان:</div>`
+    +rows.map(r=>`<div style="font-size:13px;padding:2px 0">${r}</div>`).join('');
+  return h;
 }
 
 /* بدء التشغيل */
