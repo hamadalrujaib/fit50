@@ -771,7 +771,7 @@ let VIEW = null;                       // اليوم المعروض (null = ال
 const day  = () => VIEW || today();    // اليوم الذي تُقرأ منه البيانات
 const isToday = () => day()===today();
 const K = {main:"rujaib-main-v1"};
-const APP_VER = 40;
+const APP_VER = 41;
 
 let STORE_OK = null;
 
@@ -1193,12 +1193,17 @@ function renderLog(){
     if(w.spd) bits.push(w.spd+" كم/س");
     if(w.jog) bits.push("هرولة "+w.jog+" د");
     if(w.lifts){ const v=liftVolume(w.lifts); if(v) bits.push(v.toLocaleString('en')+" كجم"); }
+    const lfTxt = w.lifts ? Object.keys(w.lifts).map(n=>{
+      const x=w.lifts[n];
+      return n+": "+(x.w?x.w+"كجم":"")+(x.r?" × "+x.r:"")+(x.s?" × "+x.s:"");
+    }).join(" · ") : "";
     if(w.avg) bits.push("نبض "+w.avg);
     if(w.max&&w.rec) bits.push("تعافي -"+(w.max-w.rec));
     const ic = w.parts ? w.parts.map(p=>p.icon).join(" ") : "🏃";
     return `<div class="row">
       <div class="rt" onclick="editWorkout(${idx})"><b>${ic} ${w.type}</b>
-        <span>${w.date} · ${bits.join(" · ")}</span></div>
+        <span>${w.date} · ${bits.join(" · ")}</span>
+        ${lfTxt?`<span style="display:block;font-size:11px;color:#8FA39C;margin-top:3px;line-height:1.7">${esc(lfTxt)}</span>`:''}</div>
       <span style="color:#C3CFCA;font-size:16px;flex:none" onclick="editWorkout(${idx})">✎</span></div>`;
   }).join('')+`</div>`;
 }
@@ -2955,6 +2960,27 @@ function editWorkout(i){
                value="${p[f]!==undefined&&p[f]!==null?p[f]:''}"></div>`).join('')}
          </div></div>`;
      }).join('')}
+     ${w.lifts&&Object.keys(w.lifts).length?`
+     <div class="card" style="margin-bottom:9px;padding:12px 13px;background:#FAFCFB">
+       <b style="font-size:13.5px">الأوزان المسجّلة</b>
+       ${Object.keys(w.lifts).map((n,j)=>{
+         const x=w.lifts[n];
+         return `<div style="margin-top:9px">
+           <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+             <b style="flex:1;font-size:12.5px">${esc(n)}</b>
+             <span onclick="liftHistory('${n.replace(/'/g,"\\'")}')"
+               style="font-size:11px;color:#1C6E8C;background:#EAF3F7;padding:3px 9px;border-radius:20px">📈 التطوّر</span>
+           </div>
+           <div class="grid3">
+             <div><label class="f" style="margin:0 0 3px">وزن</label>
+               <input class="in" id="el${j}_w" type="number" inputmode="decimal" style="padding:8px" value="${x.w??''}"></div>
+             <div><label class="f" style="margin:0 0 3px">تكرارات</label>
+               <input class="in" id="el${j}_r" type="number" inputmode="numeric" style="padding:8px" value="${x.r??''}"></div>
+             <div><label class="f" style="margin:0 0 3px">مجموعات</label>
+               <input class="in" id="el${j}_s" type="number" inputmode="numeric" style="padding:8px" value="${x.s??''}"></div>
+           </div></div>`;
+       }).join('')}
+     </div>`:''}
      <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:4px">
        <label class="f">قياسات النبض</label>
        <div class="grid3">
@@ -2993,6 +3019,12 @@ function saveEdit(i){
   w.parts=parts; w.min=totMin;
   w.km=totKm||null; w.kcal=totKcal||null; w.jog=jog||null; w.spdmax=spdmax||null;
   w.spd = totKm&&totMin ? Math.round(totKm/(totMin/60)*10)/10 : null;
+  if(w.lifts){
+    Object.keys(w.lifts).forEach((n,j)=>{
+      const gw=g('el'+j+'_w'), gr=g('el'+j+'_r'), gs=g('el'+j+'_s');
+      if(gw!==null||gr!==null||gs!==null) w.lifts[n]={w:gw,r:gr,s:gs};
+    });
+  }
   w.avg=g('eAvg'); w.max=g('eMax'); w.rec=g('eRec');
   w.note=document.getElementById('eNote').value;
   save(); closeSheet(); renderLog(); renderKpis(); renderInfo(); renderHeat(); renderBadges();
@@ -3649,6 +3681,8 @@ function liftRows(actIdx){
           <b style="flex:1;font-size:12.5px">${n}</b>
           ${exKey(n)?`<span onclick="openEx('${n.replace(/'/g,"\\'")}')"
             style="font-size:11px;color:var(--green);background:#EAF3EF;padding:3px 8px;border-radius:20px">شرح</span>`:''}
+          <span onclick="liftHistory('${n.replace(/'/g,"\\'")}')"
+            style="font-size:11px;color:#1C6E8C;background:#EAF3F7;padding:3px 8px;border-radius:20px">📈</span>
           ${p.w!==undefined||p.r!==undefined?`<span style="font-size:10.5px;color:#9AACA6">
             آخر مرة: ${p.w?p.w+' كجم × ':''}${p.r||''}${p.s?' × '+p.s:''}</span>`:''}
         </div>
@@ -3676,6 +3710,45 @@ function collectLifts(actIdx){
     if(w!==null||r!==null) out[n]={w:w,r:r,s:st};
   });
   return Object.keys(out).length?out:null;
+}
+
+function liftHistory(name){
+  const rows=[];
+  S.workouts.forEach(w=>{ if(w.lifts&&w.lifts[name]) rows.push({d:w.date,x:w.lifts[name]}); });
+  const last=rows.slice(-10);
+  let body;
+  if(!last.length){
+    body=`<div class="empty">لم تسجّل هذا التمرين بعد.</div>`;
+  } else {
+    body=last.slice().reverse().map((o,i)=>{
+      const x=o.x, prev=i<last.length-1?last[last.length-2-i].x:null;
+      let d='';
+      if(prev&&x.w&&prev.w){
+        const v=+(x.w-prev.w).toFixed(1);
+        if(v!==0) d=`<b style="color:${v>0?'#2F8F6E':'#B4531F'};font-size:12px">${v>0?'+':''}${v} كجم</b>`;
+        else d=`<span style="font-size:12px;color:#9AACA6">ثابت</span>`;
+      }
+      const vol = (x.w&&x.r&&x.s)? Math.round(x.w*x.r*x.s) : 0;
+      return `<div class="lab"><div class="ln"><b>${o.d}</b>
+        <span>${x.r||'—'} تكرار × ${x.s||'—'} مجموعات${vol?' · حجم '+vol.toLocaleString('en')+' كجم':''}</span></div>
+        <div style="text-align:left"><div class="lv">${x.w!==null&&x.w!==undefined?x.w:'—'}
+          <span style="font-size:11px;color:#9AACA6"> كجم</span></div>${d?`<div>${d}</div>`:''}</div></div>`;
+    }).join('');
+    const ws=last.filter(o=>o.x.w).map(o=>o.x.w);
+    if(ws.length>1){
+      const df=+(ws[ws.length-1]-ws[0]).toFixed(1);
+      body+=`<div class="note">من <b>${ws[0]}</b> إلى <b>${ws[ws.length-1]}</b> كجم
+        <b style="color:${df>0?'#2F8F6E':(df<0?'#B4531F':'#7D908A')}">(${df>0?'+':''}${df})</b>
+        على مدى ${last.length} جلسات</div>`;
+    }
+  }
+  document.getElementById('sheet').innerHTML=
+  `<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sc">
+     <h3>${esc(name)}</h3>
+     <div class="sub">تطوّر الوزن عبر الجلسات — الأحدث أولًا</div>
+     <div class="card">${body}</div>
+     <button class="btn ghost" onclick="closeSheet()">إغلاق</button>
+   </div></div>`;
 }
 
 function liftVolume(L){
